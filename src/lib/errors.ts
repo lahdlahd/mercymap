@@ -28,6 +28,9 @@ export function friendlyDbError(message: string | undefined | null): string {
 
 export function friendlyAuthError(code: string | undefined, message: string | undefined): string {
   const key = `${code ?? ""} ${message ?? ""}`.toLowerCase();
+  if (key.includes("retryablefetch") || key.includes("fetch failed") || key.includes("failed to fetch")) {
+    return "We could not reach the account service. Check your internet connection and try again.";
+  }
   if (key.includes("email_not_confirmed") || key.includes("email not confirmed")) {
     return "Confirm your email address before signing in. Check your inbox for the confirmation link.";
   }

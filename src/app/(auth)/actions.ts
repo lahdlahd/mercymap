@@ -35,7 +35,7 @@ export async function signUpAction(_state: FormState, formData: FormData): Promi
   });
   if (error) {
     console.error("sign-up failed:", error.code ?? error.name);
-    return { message: friendlyAuthError(error.code, error.message), values: { email } };
+    return { message: friendlyAuthError(error.code ?? error.name, error.message), values: { email } };
   }
 
   // Remember where the person was heading (an invitation, say) so the
@@ -64,7 +64,7 @@ export async function signInAction(_state: FormState, formData: FormData): Promi
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) {
     console.error("sign-in failed:", error.code ?? error.name);
-    return { message: friendlyAuthError(error.code, error.message), values: { email } };
+    return { message: friendlyAuthError(error.code ?? error.name, error.message), values: { email } };
   }
   redirect(safeNextPath(text(formData, "next")));
 }
@@ -122,7 +122,7 @@ export async function updatePasswordAction(_state: FormState, formData: FormData
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
   if (error) {
     console.error("password update failed:", error.code ?? error.name);
-    return { message: friendlyAuthError(error.code, error.message) };
+    return { message: friendlyAuthError(error.code ?? error.name, error.message) };
   }
   redirect("/app");
 }

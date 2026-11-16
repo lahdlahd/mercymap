@@ -142,5 +142,6 @@ describe("error messages", () => {
     expect(friendlyAuthError("email_not_confirmed", "")).toMatch(/Confirm your email/);
     expect(friendlyAuthError("over_email_send_rate_limit", "")).toMatch(/Too many attempts/);
     expect(friendlyAuthError(undefined, undefined)).toBe("Something went wrong. Please try again.");
+    expect(friendlyAuthError("AuthRetryableFetchError", "fetch failed")).toMatch(/could not reach the account service/);
   });
 });
