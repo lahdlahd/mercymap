@@ -36,14 +36,22 @@ Expected: `0` and `5`.
 2. **URL Configuration → Site URL:** `http://localhost:3000` for local testing
    (change to the deployed address later).
 3. **URL Configuration → Redirect URLs:** add `http://localhost:3000/**`.
-4. **Email Templates → Confirm signup:** set the link to
-   `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email`
-5. **Email Templates → Reset password:** set the link to
-   `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/update-password`
+4. **Email templates: leave as they are for now.** Supabase only allows the
+   templates to be edited once a custom SMTP provider is set up (confirmed on
+   the live project, 16 Nov 2026). The app accepts Supabase's default links,
+   with two limits during testing:
+   - Open each email link in the **same browser window** you signed up in
+     (for a private window, copy the link from the email and paste it there).
+   - A link from "Send the email again" may land on the sign-in page saying the
+     link expired. The address is still confirmed; sign in normally.
+
+   When custom SMTP is configured before real use, switch the templates to:
+   - Confirm signup: `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email`
+   - Reset password: `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/update-password`
 
 Supabase's built-in email sender is intended for testing and limits how many
 emails it sends per hour. If confirmation emails stop arriving during testing,
-that limit is the likely cause. A custom SMTP provider is needed before real use.
+that limit is the likely cause.
 
 ### A3. Run the app
 
