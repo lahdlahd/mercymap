@@ -15,7 +15,7 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
 
 | # | Milestone | Status |
 |---|---|---|
-| 1 | Database schema, RLS, tenant isolation, security tests | Complete, awaiting review |
+| 1 | Database schema, RLS, tenant isolation, security tests | Complete (see verification notes) |
 | 2 | Authentication, church creation, verification, staff invitations | Not started |
 | 3 | Public and staff-assisted intake | Not started |
 | 4 | Requests list, details, lifecycle, event history | Not started |
@@ -26,6 +26,15 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
 | 9 | Landing page and polish | Not started |
 | 10 | Optional voice recording and transcription | Not started |
 | 11 | Demo data, regression testing, demo preparation | Not started |
+
+### Verification notes
+
+- **Milestone 1.** The 85 database tests pass on a local PostgreSQL 16 using a
+  stand-in for Supabase's `auth` schema and roles. The migrations were applied to
+  the live Supabase project on 16 Nov 2026 and a structural check passed there
+  (RLS on all 15 tables, no anonymous grants, no anonymous function access,
+  24 policies, 9 categories). **The behavioural test suite has not been run
+  against the live Supabase project; that verification is still outstanding.**
 
 ## Repository layout
 
