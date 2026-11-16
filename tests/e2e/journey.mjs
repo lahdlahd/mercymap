@@ -182,7 +182,8 @@ try {
     `select m.id from public.church_memberships m join auth.users u on u.id = m.user_id where u.email = 'coord@grace.test'`)).rows[0].id;
   await owner.page.select(`#role-${coordMembership}`, 'admin');
   await owner.press('Save role');
-  check('owner promotes a coordinator to administrator', /Role updated/.test(await owner.text()));
+  check('owner promotes a coordinator to administrator',
+    (await owner.text()).includes('coord@grace.test\nAdministrator') || /coord@grace\.test[\s\S]{0,40}Administrator/.test(await owner.text()));
   await coord.go('/app/settings/staff');
   t = await coord.text();
   check('new administrator can invite but still cannot change roles', /Invite someone/.test(t) && !/Save role/.test(t));

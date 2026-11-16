@@ -35,11 +35,11 @@ export function ActionForm({
         }}
       >
         {state.message ? (
-          <div className="mb-4">
+          <div className="mb-4 w-full basis-full">
             <Alert tone={state.ok ? "success" : "error"}>{state.message}</Alert>
           </div>
         ) : null}
-        {state.ok && renderResult ? <div className="mb-4">{renderResult(state)}</div> : null}
+        {state.ok && renderResult ? <div className="mb-4 w-full basis-full">{renderResult(state)}</div> : null}
         {children}
       </form>
     </FormContext>

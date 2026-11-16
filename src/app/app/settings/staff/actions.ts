@@ -97,7 +97,9 @@ export async function changeRoleAction(_state: FormState, formData: FormData): P
   if (error) return { message: friendlyDbError(error.message) };
 
   revalidatePath(STAFF_PATH);
-  return { ok: true, message: "Role updated." };
+  // No success banner: the updated role badge is the confirmation, and a
+  // banner inside the row crowds the controls.
+  return { ok: true };
 }
 
 export async function removeMemberAction(_state: FormState, formData: FormData): Promise<FormState> {
