@@ -28,7 +28,7 @@ export default async function OverviewPage() {
       ) : null}
       {church.status === "verified" ? (
         <Alert tone="success" title="Your church is verified">
-          Your public request link is reserved: <span className="break-all font-medium">{publicLink}</span>. The
+          Your public request link is reserved: <span className="font-medium [overflow-wrap:anywhere]">{publicLink}</span>. The
           request page itself is the next part of MERCYMAP to be switched on.
         </Alert>
       ) : null}

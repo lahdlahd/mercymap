@@ -38,7 +38,7 @@ export function friendlyAuthError(code: string | undefined, message: string | un
     return "That email and password do not match.";
   }
   if (key.includes("over_email_send_rate_limit") || key.includes("rate limit") || key.includes("over_request_rate_limit")) {
-    return "Too many attempts. Wait a few minutes and try again.";
+    return "Too many attempts or emails recently. Please try again later.";
   }
   if (key.includes("weak_password")) {
     return "That password is too easy to guess. Choose a stronger one.";

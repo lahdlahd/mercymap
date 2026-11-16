@@ -83,7 +83,7 @@ export async function resendConfirmationAction(_state: FormState, formData: Form
     if (error) {
       console.error("resend confirmation failed:", error.code ?? error.name);
       if (/rate/i.test(`${error.code} ${error.message}`)) {
-        return { message: "Please wait a minute before asking for another email." };
+        return { message: "Too many emails have been sent recently. Please try again later." };
       }
     }
   }
@@ -102,7 +102,7 @@ export async function requestPasswordResetAction(_state: FormState, formData: Fo
   if (error) {
     console.error("password reset request failed:", error.code ?? error.name);
     if (/rate/i.test(`${error.code} ${error.message}`)) {
-      return { message: "Please wait a minute before asking for another email.", values: { email } };
+      return { message: "Too many emails have been sent recently. Please try again later.", values: { email } };
     }
   }
   return { ok: true, message: "If an account exists for that address, a reset link is on its way." };
