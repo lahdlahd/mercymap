@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test:db": "node --test --test-concurrency=1 tests/db/*.test.mjs"
+    "test:db": "node --test --test-concurrency=1 --test-reporter=spec tests/db/*.test.mjs"
   },
   "devDependencies": {
     "pg": "^8.13.0"
