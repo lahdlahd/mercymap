@@ -113,6 +113,7 @@ export const EVENT_LABEL: Record<string, string> = {
   note_added: "Note added",
   attention_flagged: "Safeguarding concern raised",
   attention_acknowledged: "Safeguarding concern reviewed",
+  category_changed: "Kind of help changed",
 };
 
 // Tabs on the Requests page. "attention" is a filter, not a status.
@@ -142,6 +143,11 @@ export function requestDbError(message: string | undefined): string {
   if (/already_flagged/.test(text)) return "A safeguarding concern is already open on this request.";
   if (/not_flagged/.test(text)) return "There is no open safeguarding concern to review.";
   if (/church_suspended/.test(text)) return "This workspace is suspended, so requests cannot be changed.";
+  if (/ai_limit_reached/.test(text)) return "This request has been analysed as many times as allowed.";
+  if (/ai_running/.test(text)) return "An analysis is already running. Refresh in a moment.";
+  if (/category_changed|suggestion_changed/.test(text)) return "The kind of help or the suggestion changed a moment ago. The page has been refreshed.";
+  if (/category_locked/.test(text)) return "The kind of help cannot change once stock is reserved or the request is closed.";
+  if (/no_suggestion/.test(text)) return "There is no different kind of help suggested.";
   if (/resource_not_suitable: not_enough|insufficient_available_quantity/.test(text)) return "That resource no longer has enough available. The list has been refreshed.";
   if (/resource_not_suitable: (expired|not_yet_valid)|resource_outside_validity/.test(text)) return "That resource is not within its available dates. The list has been refreshed.";
   if (/resource_not_suitable: area_not_covered/.test(text)) return "That resource does not cover this person's area.";

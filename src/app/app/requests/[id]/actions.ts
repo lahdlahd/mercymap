@@ -2,6 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
+import { runAnalysis } from "@/lib/ai/run";
+import { aiConfig } from "@/lib/server-env";
 import { getCurrentUser } from "@/lib/auth";
 import type { FormState } from "@/lib/form-state";
 import { isRequestStatus, needsNote, requestDbError, STATUS_LABEL } from "@/lib/requests";
@@ -27,7 +30,7 @@ async function run(requestId: string, fn: (supabase: Awaited<ReturnType<typeof c
       revalidatePath(path);
       redirect(`${path}?changed=1`);
     }
-    if (/resource_|insufficient_available/.test(error.message)) revalidatePath(path);
+    if (/resource_|insufficient_available|category_changed|suggestion_changed|no_suggestion/.test(error.message)) revalidatePath(path);
     return { message: requestDbError(error.message) };
   }
   revalidatePath(path);
@@ -52,9 +55,18 @@ export async function changeStatusAction(
   if (needsNote(from, to) && note.length < 3) {
     return { fieldErrors: { note: "Please add a short note explaining this." }, values: { toStatus: to, note } };
   }
-  return run(requestId, (s) => s.rpc("change_request_status", {
+  const result = await run(requestId, (s) => s.rpc("change_request_status", {
     p_request_id: requestId, p_from_status: from, p_to_status: to, p_note: note || null,
   }), `Status changed to ${STATUS_LABEL[to]}.`);
+  // Once a request is waiting for a resource, the AI looks again so it can
+  // suggest one of the fitting resources. Staff still choose.
+  if (result.ok && to === "awaiting_match" && aiConfig()) {
+    const supabase = await createClient();
+    const { data } = await supabase.from("requests").select("reference").eq("id", requestId).maybeSingle();
+    const reference = (data as { reference: string } | null)?.reference;
+    if (reference) after(() => runAnalysis(reference, { force: true }).then(() => undefined));
+  }
+  return result;
 }
 
 export async function addNoteAction(requestId: string, _state: FormState, formData: FormData): Promise<FormState> {
@@ -94,4 +106,33 @@ export async function fulfilAction(requestId: string, from: string, _state: Form
   return run(requestId, (s) => s.rpc("record_fulfilment", {
     p_request_id: requestId, p_from_status: from, p_note: note || null,
   }), "Recorded as fulfilled.");
+}
+
+// Staff ask for a fresh analysis. The database first checks they belong to the
+// church and records the request; only then does the server run it.
+export async function rerunAiAction(requestId: string): Promise<FormState> {
+  if (!(await getCurrentUser())) return SESSION_ENDED;
+  if (!uuidSchema.safeParse(requestId).success) return { message: "That request could not be found." };
+  if (!aiConfig()) return { message: "AI suggestions are not set up for this workspace." };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("ai_request_rerun", { p_request_id: requestId });
+  if (error) {
+    console.error("ai_request_rerun failed:", error.code ?? "unknown");
+    return { message: requestDbError(error.message) };
+  }
+  const outcome = await runAnalysis(String(data), { force: true });
+  revalidatePath(`/app/requests/${requestId}`);
+  revalidatePath("/app/requests");
+  if (outcome === "done") return { ok: true, message: "Suggestions updated." };
+  if (outcome === "skipped") return { message: "An analysis is already running. Refresh in a moment." };
+  return { message: "The AI could not be reached. Try again later; everything else works as normal." };
+}
+
+// Accepts the suggested kind of help. The category and the analysis shown are
+// bound on the server, so a stale page cannot apply an old suggestion.
+export async function applySuggestedCategoryAction(requestId: string, fromCategory: string, analysisId: string): Promise<FormState> {
+  if (!uuidSchema.safeParse(analysisId).success) return { message: "Refresh the page and try again." };
+  return run(requestId, (s) => s.rpc("apply_ai_category", {
+    p_request_id: requestId, p_from_category: fromCategory, p_analysis_id: analysisId,
+  }), "Kind of help updated.");
 }

@@ -15,9 +15,11 @@ import {
   type RequestStatus,
   requestDbError,
 } from "@/lib/requests";
+import { aiConfig } from "@/lib/server-env";
 import { createClient } from "@/lib/supabase/server";
 import { uuidSchema } from "@/lib/validation";
 import { acknowledgeAttentionAction, addNoteAction, approveAction, changeStatusAction, flagAttentionAction, fulfilAction } from "./actions";
+import { AiPanel, type AiDetail } from "./ai-panel";
 import { AcknowledgeForm, ApproveForm, ClearChangedNotice, FlagForm, FulfilForm, NoteForm, StatusForm, type Candidate } from "./forms";
 
 export const metadata: Metadata = { title: "Request", robots: { index: false, follow: false } };
@@ -26,6 +28,8 @@ type Detail = {
   request: {
     id: string;
     reference: string;
+    category_key: string;
+    ai_claimed_at: string | null;
     status: RequestStatus;
     channel: "public" | "staff";
     original_text: string;
@@ -62,6 +66,7 @@ type Detail = {
     release_reason: string | null;
   } | null;
   attention_acknowledged_by_email: string | null;
+  ai: AiDetail;
   events: Array<{
     id: string;
     event_type: string;
@@ -95,6 +100,7 @@ export default async function RequestDetailPage({
   const attentionOpen = r.attention_flag && !r.attention_acknowledged_at;
   const suspended = membership.church.status === "suspended";
   const allocation = d.allocation;
+  const aiEnabled = aiConfig() !== null;
 
   let candidates: Candidate[] | null = null;
   if (r.status === "awaiting_match" && !suspended) {
@@ -174,6 +180,17 @@ export default async function RequestDetailPage({
             <p className="mt-3 whitespace-pre-wrap break-words text-base text-charcoal">{r.original_text}</p>
           </Card>
 
+          <AiPanel
+            ai={d.ai}
+            configured={aiEnabled}
+            requestId={r.id}
+            status={r.status}
+            categoryKey={r.category_key}
+            suspended={suspended}
+            createdAt={r.created_at}
+            claimedAt={r.ai_claimed_at}
+          />
+
           <Card>
             <h2 className="text-lg font-bold text-charcoal">Details</h2>
             <dl className="mt-3 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
@@ -205,7 +222,7 @@ export default async function RequestDetailPage({
                   </p>
                   <p className="text-xs text-muted">
                     {formatDateTime(e.created_at)}
-                    {e.actor_email ? ` · ${e.actor_email}` : e.event_type === "submitted" && r.channel === "public" ? " · online form" : ""}
+                    {e.actor_email ? ` · ${e.actor_email}` : e.event_type === "submitted" && r.channel === "public" ? " · online form" : e.event_type === "attention_flagged" ? " · automatic check" : ""}
                   </p>
                   {e.note ? <p className="mt-1 whitespace-pre-wrap break-words text-sm text-charcoal">{e.note}</p> : null}
                 </li>

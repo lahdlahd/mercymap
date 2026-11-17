@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ActionForm, ChoiceGroup, SubmitButton, TextAreaField } from "@/components/action-form";
 import type { FormState } from "@/lib/form-state";
@@ -177,4 +178,36 @@ export function ClearChangedNotice() {
     }
   }, []);
   return null;
+}
+
+// While an analysis is waiting or running, refresh the page a few times so the
+// suggestions appear without the person reloading.
+export function AiAutoRefresh() {
+  const router = useRouter();
+  useEffect(() => {
+    let count = 0;
+    const timer = window.setInterval(() => {
+      count += 1;
+      router.refresh();
+      if (count >= 10) window.clearInterval(timer);
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, [router]);
+  return null;
+}
+
+export function RerunAiForm({ action, label }: { action: Action; label: string }) {
+  return (
+    <ActionForm action={action}>
+      <SubmitButton variant="secondary" pendingLabel="Analysing…">{label}</SubmitButton>
+    </ActionForm>
+  );
+}
+
+export function UseCategoryForm({ action, label }: { action: Action; label: string }) {
+  return (
+    <ActionForm action={action} confirm={`Change the kind of help to ${label}?`}>
+      <SubmitButton variant="secondary" pendingLabel="Saving…">Use suggested category</SubmitButton>
+    </ActionForm>
+  );
 }
