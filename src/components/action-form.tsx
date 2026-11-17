@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useActionState, useContext, useId, type ComponentProps, type ReactNode } from "react";
+import { createContext, useActionState, useContext, useEffect, useId, useRef, type ComponentProps, type ReactNode } from "react";
 import { Alert, buttonClass, type ButtonVariant } from "@/components/ui";
 import { emptyFormState, type FormState } from "@/lib/form-state";
 
@@ -15,6 +15,7 @@ export function ActionForm({
   className,
   confirm,
   renderResult,
+  resetOnSuccess,
 }: {
   action: Action;
   children: ReactNode;
@@ -22,11 +23,18 @@ export function ActionForm({
   // If set, the browser asks this question before submitting.
   confirm?: string;
   renderResult?: (state: FormState) => ReactNode;
+  // Clear the fields after a successful submit (for forms used repeatedly).
+  resetOnSuccess?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(action, emptyFormState);
+  const formRef = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (resetOnSuccess && state.ok) formRef.current?.reset();
+  }, [state, resetOnSuccess]);
   return (
     <FormContext value={{ state, pending }}>
       <form
+        ref={formRef}
         action={formAction}
         className={className}
         noValidate

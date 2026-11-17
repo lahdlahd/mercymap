@@ -9,7 +9,7 @@ import {
   SubmitButton,
   TextAreaField,
 } from "@/components/action-form";
-import { Alert, Button } from "@/components/ui";
+import { Alert, Button, buttonClass } from "@/components/ui";
 import { emptyFormState, type FormState } from "@/lib/form-state";
 import { DESCRIPTION_MAX } from "@/lib/intake";
 import { Turnstile } from "./turnstile";
@@ -70,9 +70,16 @@ function RequestFormInner({ action, categories, mode, churchName, siteKey, onAno
               Reference <strong className="font-mono">{state.data.reference}</strong>. Give this to the person so they can
               quote it when they get in touch.
             </Alert>
-            <Button type="button" variant="secondary" onClick={onAnother}>
-              Record another request
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              {state.data.id ? (
+                <a href={`/app/requests/${state.data.id}`} className={buttonClass("primary")}>
+                  Open this request
+                </a>
+              ) : null}
+              <Button type="button" variant="secondary" onClick={onAnother}>
+                Record another request
+              </Button>
+            </div>
           </div>
         )}
       </div>

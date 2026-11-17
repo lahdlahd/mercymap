@@ -1,0 +1,10 @@
+{
+  "_comment": "Status changes staff may make by hand. The database enforces the same list (private.request_transition_allowed); tests/db/requests.test.mjs checks both agree. Approved, In Progress and Fulfilled are reached only through resource allocation (Milestone 5).",
+  "transitions": {
+    "submitted": ["under_review", "declined", "cancelled"],
+    "under_review": ["awaiting_clarification", "awaiting_match", "declined", "cancelled", "unable_to_fulfil"],
+    "awaiting_clarification": ["under_review", "declined", "cancelled"],
+    "awaiting_match": ["under_review", "declined", "cancelled", "unable_to_fulfil"]
+  },
+  "noteRequired": ["awaiting_clarification", "declined", "cancelled", "unable_to_fulfil"]
+}
