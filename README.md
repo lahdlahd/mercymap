@@ -20,7 +20,7 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
 | 3 | Public and staff-assisted intake | Complete; live tests passed (see verification notes) |
 | 4 | Requests list, details, lifecycle, event history | Complete; live tests passed (see verification notes) |
 | 5 | Resources, matching, transactional allocation | Complete; migration applied live, live test steps skipped (see verification notes) |
-| 6 | AI analysis, summaries, recommendations, safeguarding flags | Built and tested locally; live tests pending |
+| 6 | AI analysis, summaries, recommendations, safeguarding flags | Complete; migration applied live, partly tested live (no Anthropic key yet; see verification notes) |
 | 7 | Notifications and volunteer coordination | Not started |
 | 8 | Dashboard, Reports & Impact, exports | Not started |
 | 9 | Landing page and polish | Not started |
@@ -77,8 +77,11 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
   words on every new request even when the AI is off. Accepting a suggested kind
   of help is a staff action recorded in history and the audit log. Locally: 228
   database tests (mutation-checked), 149 unit tests and five browser journeys
-  (60, 54, 54, 77 and 44 checks) against a fake Claude endpoint. **Live tests
-  pending:** [`docs/milestone-6-live-test.md`](docs/milestone-6-live-test.md).
+  (60, 54, 54, 77 and 44 checks) against a fake Claude endpoint. Live, 17 Nov
+  2026: migration check, the no-key panel and the keyword safeguarding flag
+  passed; **the real Claude API has not been tested yet (no key with credit) and
+  the other steps were skipped by decision of the project owner**; see
+  [`docs/milestone-6-live-test-results.md`](docs/milestone-6-live-test-results.md).
 
 ## Secrets
 
