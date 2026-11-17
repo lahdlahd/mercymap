@@ -16,7 +16,7 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
 | # | Milestone | Status |
 |---|---|---|
 | 1 | Database schema, RLS, tenant isolation, security tests | Complete (see verification notes) |
-| 2 | Authentication, church creation, verification, staff invitations | Built and locally tested; **live Supabase testing outstanding** |
+| 2 | Authentication, church creation, verification, staff invitations | Complete; live tests passed (see verification notes) |
 | 3 | Public and staff-assisted intake | Not started |
 | 4 | Requests list, details, lifecycle, event history | Not started |
 | 5 | Resources, matching, transactional allocation | Not started |
@@ -36,13 +36,11 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
   24 policies, 9 categories). **The behavioural test suite has not been run
   against the live Supabase project; that verification is still outstanding.**
 
-- **Milestone 2.** Tested locally only: 112 database tests, 45 unit tests and a
-  60-check browser journey that drives the real app against a mock of Supabase's
-  API backed by a real PostgreSQL. **Nothing in Milestone 2 has been run against
-  the live Supabase project.** Real sign-up, email confirmation, sign-in,
-  password reset and the Milestone 2 migration must be verified with
-  [`docs/milestone-2-live-test.md`](docs/milestone-2-live-test.md) before
-  authentication is treated as verified.
+- **Milestone 2.** Locally: 112 database tests, 45 unit tests and a 60-check
+  browser journey against a mock Supabase API. Live: the full test script was run
+  against the live Supabase project on 16–17 Nov 2026 and every step passed; see
+  [`docs/milestone-2-live-test-results.md`](docs/milestone-2-live-test-results.md),
+  including the limitations carried forward.
 
 ## Repository layout
 
