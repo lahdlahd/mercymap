@@ -167,3 +167,20 @@ describe('staff-assisted submission', () => {
       [s.grace, 'food', TEXT, 'none'], DENIED);
   });
 });
+
+describe('text cleaning keeps the letter v', () => {
+  test('words starting or ending with v are stored whole', async () => {
+    const { rows } = await pool.query(
+      `select private.clean_text('voucher', 40) as a, private.clean_text('  Viv  ', 40) as b,
+              private.clean_text(E'\\t' || chr(11) || 'Kiev' || chr(11) || E'\\n', 40) as c,
+              private.clean_text(chr(11) || ' ' || chr(11), 40) as d`);
+    assert.deepEqual(rows[0], { a: 'voucher', b: 'Viv', c: 'Kiev', d: null });
+  });
+  test('a public request from "Viv" in "Ovbiogie Ave" keeps both names', async () => {
+    const reference = (await submit({ ip: ip(77), name: 'Viv', area: 'Ovbiogie Ave', text: 'Need food vouchers please v' })).rows[0].reference;
+    const r = await requestByRef(reference);
+    assert.equal(r.requester_name, 'Viv');
+    assert.equal(r.area, 'Ovbiogie Ave');
+    assert.equal(r.original_text, 'Need food vouchers please v');
+  });
+});

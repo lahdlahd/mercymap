@@ -1,10 +1,13 @@
 {
-  "_comment": "Status changes staff may make by hand. The database enforces the same list (private.request_transition_allowed); tests/db/requests.test.mjs checks both agree. Approved, In Progress and Fulfilled are reached only through resource allocation (Milestone 5).",
+  "_comment": "Status changes staff may make with change_request_status. The database enforces the same rules (private.request_transition_allowed and private.request_change_needs_note); tests/db/requests.test.mjs checks both agree. Approved is reached only by approve_allocation (which reserves stock in the same step) and Fulfilled only by record_fulfilment. Leaving Approved or In progress for any status other than In progress returns the reserved stock.",
   "transitions": {
     "submitted": ["under_review", "declined", "cancelled"],
     "under_review": ["awaiting_clarification", "awaiting_match", "declined", "cancelled", "unable_to_fulfil"],
     "awaiting_clarification": ["under_review", "declined", "cancelled"],
-    "awaiting_match": ["under_review", "declined", "cancelled", "unable_to_fulfil"]
+    "awaiting_match": ["under_review", "declined", "cancelled", "unable_to_fulfil"],
+    "approved": ["in_progress", "awaiting_match", "declined", "cancelled", "unable_to_fulfil"],
+    "in_progress": ["awaiting_match", "cancelled", "unable_to_fulfil"]
   },
-  "noteRequired": ["awaiting_clarification", "declined", "cancelled", "unable_to_fulfil"]
+  "noteRequired": ["awaiting_clarification", "declined", "cancelled", "unable_to_fulfil"],
+  "allocatedStatuses": ["approved", "in_progress"]
 }

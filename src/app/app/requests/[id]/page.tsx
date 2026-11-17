@@ -13,11 +13,12 @@ import {
   STATUS_LABEL,
   STATUS_TONE,
   type RequestStatus,
+  requestDbError,
 } from "@/lib/requests";
 import { createClient } from "@/lib/supabase/server";
 import { uuidSchema } from "@/lib/validation";
-import { acknowledgeAttentionAction, addNoteAction, changeStatusAction, flagAttentionAction } from "./actions";
-import { AcknowledgeForm, FlagForm, NoteForm, StatusForm } from "./forms";
+import { acknowledgeAttentionAction, addNoteAction, approveAction, changeStatusAction, flagAttentionAction, fulfilAction } from "./actions";
+import { AcknowledgeForm, ApproveForm, ClearChangedNotice, FlagForm, FulfilForm, NoteForm, StatusForm, type Candidate } from "./forms";
 
 export const metadata: Metadata = { title: "Request", robots: { index: false, follow: false } };
 
@@ -44,6 +45,22 @@ type Detail = {
   };
   category_label: string;
   created_by_email: string | null;
+  allocation: {
+    id: string;
+    status: "reserved" | "fulfilled" | "released";
+    quantity: number;
+    resource_id: string;
+    resource_name: string;
+    unit: string;
+    source_type: "church" | "partner";
+    source_name: string | null;
+    approved_at: string;
+    approved_by_email: string | null;
+    fulfilled_at: string | null;
+    fulfilled_by_email: string | null;
+    released_at: string | null;
+    release_reason: string | null;
+  } | null;
   attention_acknowledged_by_email: string | null;
   events: Array<{
     id: string;
@@ -56,7 +73,14 @@ type Detail = {
   }>;
 };
 
-export default async function RequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function RequestDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ changed?: string }>;
+}) {
+  const changed = (await searchParams).changed === "1";
   const { membership } = await requireMembership();
   const { id } = await params;
   if (!uuidSchema.safeParse(id).success) notFound();
@@ -70,6 +94,13 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
   const options = nextStatuses(r.status);
   const attentionOpen = r.attention_flag && !r.attention_acknowledged_at;
   const suspended = membership.church.status === "suspended";
+  const allocation = d.allocation;
+
+  let candidates: Candidate[] | null = null;
+  if (r.status === "awaiting_match" && !suspended) {
+    const m = await supabase.rpc("list_matching_resources", { p_request_id: r.id });
+    candidates = m.error ? null : ((m.data as { resources: Candidate[] }).resources ?? []);
+  }
 
   return (
     <div className="mx-auto max-w-5xl space-y-5">
@@ -86,6 +117,13 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
         {d.category_label} · received {formatDateTime(r.created_at)} ·{" "}
         {r.channel === "staff" ? `recorded by ${d.created_by_email ?? "a former staff member"}` : CHANNEL_LABEL.public}
       </p>
+
+      {changed ? (
+        <div>
+          <ClearChangedNotice />
+          <Alert tone="error">{requestDbError("status_changed")}</Alert>
+        </div>
+      ) : null}
 
       {attentionOpen ? (
         <section aria-labelledby="attention-heading" className="rounded-xl border border-danger/40 bg-danger-soft p-5 text-danger-ink">
@@ -109,6 +147,24 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
         <Alert tone={r.status === "declined" ? "warning" : "info"} title={`${STATUS_LABEL[r.status]}`}>
           <p className="whitespace-pre-wrap">{r.outcome_reason}</p>
         </Alert>
+      ) : null}
+
+      {allocation && allocation.status !== "released" ? (
+        <section aria-labelledby="allocation-heading"
+          className={`rounded-xl border p-5 ${allocation.status === "fulfilled" ? "border-success/30 bg-sage" : "border-progress/30 bg-[#e8f0f8]"}`}>
+          <h2 id="allocation-heading" className="font-bold text-charcoal">
+            {allocation.status === "fulfilled" ? "Help given" : "Stock reserved"}
+          </h2>
+          <p className="mt-1 text-charcoal">
+            {allocation.quantity} {allocation.unit} from{" "}
+            <Link href={`/app/resources/${allocation.resource_id}`} className="font-semibold underline">{allocation.resource_name}</Link>
+            {allocation.source_type === "partner" && allocation.source_name ? ` (${allocation.source_name})` : ""}
+          </p>
+          <p className="mt-1 text-sm text-muted">
+            Approved by {allocation.approved_by_email ?? "a former staff member"} on {formatDateTime(allocation.approved_at)}
+            {allocation.fulfilled_at ? ` · delivered ${formatDateTime(allocation.fulfilled_at)}${allocation.fulfilled_by_email ? ` (recorded by ${allocation.fulfilled_by_email})` : ""}` : ""}
+          </p>
+        </section>
       ) : null}
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
@@ -169,13 +225,31 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
               ) : options.length === 0 ? (
                 <p className="text-sm text-muted">No manual changes are available from this status.</p>
               ) : (
-                <StatusForm action={changeStatusAction.bind(null, r.id, r.status)} status={r.status} options={options} />
+                <div className="space-y-6">
+                  {r.status === "awaiting_match" ? (
+                    candidates ? (
+                      <div>
+                        <h3 className="mb-2 font-semibold text-charcoal">Approve and reserve stock</h3>
+                        <ApproveForm action={approveAction.bind(null, r.id, r.status)} candidates={candidates} quantity={r.quantity_needed} />
+                      </div>
+                    ) : (
+                      <Alert tone="error">Matching resources could not be loaded. Refresh the page to try again.</Alert>
+                    )
+                  ) : null}
+                  {(r.status === "approved" || r.status === "in_progress") && allocation?.status === "reserved" ? (
+                    <div>
+                      <h3 className="mb-2 font-semibold text-charcoal">Help given?</h3>
+                      <FulfilForm action={fulfilAction.bind(null, r.id, r.status)} />
+                    </div>
+                  ) : null}
+                  <div className={r.status === "awaiting_match" || r.status === "approved" || r.status === "in_progress" ? "border-t border-line pt-5" : undefined}>
+                    {r.status === "awaiting_match" || r.status === "approved" || r.status === "in_progress" ? (
+                      <h3 className="mb-2 font-semibold text-charcoal">Or</h3>
+                    ) : null}
+                    <StatusForm action={changeStatusAction.bind(null, r.id, r.status)} status={r.status} options={options} />
+                  </div>
+                </div>
               )}
-              {r.status === "awaiting_match" ? (
-                <p className="mt-4 text-sm text-muted">
-                  Approval happens when a resource is reserved for this request. Resource matching is not switched on yet.
-                </p>
-              ) : null}
             </div>
           </Card>
 

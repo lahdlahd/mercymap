@@ -57,6 +57,7 @@ export const ACTION_LABEL: Partial<Record<RequestStatus, { label: string; help: 
     help: "The church wanted to help but could not.",
     notePrompt: "What prevented it?",
   },
+  in_progress: { label: "Start delivery", help: "Someone is arranging or delivering the help now." },
 };
 
 // The step back to review reads differently once a request has moved on.
@@ -64,18 +65,32 @@ export function actionLabel(from: RequestStatus, to: RequestStatus): { label: st
   if (to === "under_review" && from !== "submitted") {
     return { label: "Return to review", help: "Look at this request again before deciding." };
   }
+  if (holdsStock(from) && to === "awaiting_match") {
+    return { label: "Release and choose another resource", help: "Return the reserved stock and match this request again." };
+  }
+  if (holdsStock(from) && to !== "in_progress") {
+    const a = ACTION_LABEL[to];
+    return { label: a?.label ?? STATUS_LABEL[to], help: `${a?.help ?? ""} The reserved stock is returned.`.trim() };
+  }
   const a = ACTION_LABEL[to];
   return { label: a?.label ?? STATUS_LABEL[to], help: a?.help ?? "" };
 }
 
 const transitions = rules.transitions as Partial<Record<RequestStatus, RequestStatus[]>>;
 const noteRequired = new Set(rules.noteRequired as RequestStatus[]);
+const allocated = new Set(rules.allocatedStatuses as RequestStatus[]);
 
 export function nextStatuses(status: RequestStatus): RequestStatus[] {
   return transitions[status] ?? [];
 }
-export function needsNote(status: RequestStatus): boolean {
-  return noteRequired.has(status);
+// Mirrors private.request_change_needs_note: a note is needed for some
+// outcomes, and whenever reserved stock is being returned.
+export function needsNote(from: RequestStatus, to: RequestStatus): boolean {
+  return noteRequired.has(to) || (allocated.has(from) && to !== "in_progress");
+}
+// Approved and In progress requests hold reserved stock.
+export function holdsStock(status: RequestStatus): boolean {
+  return allocated.has(status);
 }
 export function isClosed(status: RequestStatus): boolean {
   return status === "fulfilled" || status === "declined" || status === "cancelled" || status === "unable_to_fulfil";
@@ -108,6 +123,8 @@ export const LIST_TABS = [
   { key: "under_review", label: "Under review" },
   { key: "awaiting_clarification", label: "Awaiting clarification" },
   { key: "awaiting_match", label: "Awaiting match" },
+  { key: "approved", label: "Approved" },
+  { key: "in_progress", label: "In progress" },
   { key: "closed", label: "Closed" },
   { key: "all", label: "All" },
 ] as const;
@@ -125,6 +142,11 @@ export function requestDbError(message: string | undefined): string {
   if (/already_flagged/.test(text)) return "A safeguarding concern is already open on this request.";
   if (/not_flagged/.test(text)) return "There is no open safeguarding concern to review.";
   if (/church_suspended/.test(text)) return "This workspace is suspended, so requests cannot be changed.";
+  if (/resource_not_suitable: not_enough|insufficient_available_quantity/.test(text)) return "That resource no longer has enough available. The list has been refreshed.";
+  if (/resource_not_suitable: (expired|not_yet_valid)|resource_outside_validity/.test(text)) return "That resource is not within its available dates. The list has been refreshed.";
+  if (/resource_not_suitable: area_not_covered/.test(text)) return "That resource does not cover this person's area.";
+  if (/resource_not_suitable|resource_not_active|resource_not_found/.test(text)) return "That resource cannot be used for this request. The list has been refreshed.";
+  if (/no_reservation/.test(text)) return "There is no reserved stock to record as delivered.";
   if (/forbidden|permission denied/.test(text)) return "You do not have permission to do that.";
   return "Something went wrong. Please try again.";
 }
