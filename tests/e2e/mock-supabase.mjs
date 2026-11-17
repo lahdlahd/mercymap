@@ -30,6 +30,9 @@ export async function startMockSupabase(port) {
   const mailbox = [];          // "emails" the tests can read: { type, email, userId }
   const usedTokens = new Set(); // Turnstile tokens already verified (single use)
   const turnstileCalls = [];
+  // Fake Claude: every request body it receives, so tests can check what was sent.
+  const aiCalls = [];
+  const aiControl = { mode: 'ok' };
 
   const userJson = (u) => ({
     id: u.id, aud: 'authenticated', role: 'authenticated', email: u.email,
@@ -160,6 +163,40 @@ export async function startMockSupabase(port) {
           return send(200, rows);
         } catch (e) { return pgError(e); }
       }
+      if (path === '/anthropic/v1/messages' && req.method === 'POST') {
+        aiCalls.push({ headers: { apiKey: req.headers['x-api-key'], version: req.headers['anthropic-version'] }, body });
+        if (aiControl.mode === 'down' || req.headers['x-api-key'] !== 'e2e-anthropic-key') {
+          return send(aiControl.mode === 'down' ? 529 : 401, { type: 'error', error: { type: 'overloaded_error', message: 'fake' } });
+        }
+        const userText = body.messages?.[0]?.content ?? '';
+        const text = (userText.split('<request_text>')[1] ?? '').toLowerCase();
+        const input = {
+          summary: `Fake summary: ${text.includes('uniform') ? 'a child needs a school uniform.' : 'the person needs help.'}`,
+          key_facts: ['Fact from the fake model'],
+          missing_info: ['How many people are in the household?'],
+          suggested_category: text.includes('uniform') ? 'clothing' : null,
+          urgency: text.includes('today') ? 'high' : 'medium',
+          safeguarding: text.includes('afraid')
+            ? { concern: true, reason: 'The person says they are afraid at home.' }
+            : { concern: false, reason: null },
+          resource_option: /Option 1:/.test(userText) ? 1 : null,
+          resource_explanation: /Option 1:/.test(userText) ? 'It covers their area and has enough stock.' : null,
+        };
+        // A request that tries to instruct the model: the fake "obeys", to prove
+        // the app ignores anything outside the allowed answer.
+        if (text.includes('ignore your rules')) Object.assign(input, { status: 'approved', approve: true, suggested_category: 'weapons', urgency: 'critical' });
+        return send(200, { id: 'msg_fake', type: 'message', role: 'assistant', model: body.model,
+          content: [{ type: 'tool_use', id: 'toolu_fake', name: 'record_analysis', input }], stop_reason: 'tool_use' });
+      }
+      if (path === '/rest/v1/requests' && req.method === 'GET') {
+        try {
+          const { rows } = await asUser(claims, (c) => c.query('select reference from public.requests where id = $1', [eq('id')]));
+          if ((req.headers.accept ?? '').includes('vnd.pgrst.object')) {
+            return rows.length === 1 ? send(200, rows[0]) : rows.length === 0 ? send(200, null) : send(406, { code: 'PGRST116', message: 'no rows' });
+          }
+          return send(200, rows);
+        } catch (e) { return pgError(e); }
+      }
       if (path === '/turnstile/siteverify') {
         const token = body.response ?? '';
         const ok = body.secret === E2E_TURNSTILE_SECRET && token.startsWith('e2e-pass') && !usedTokens.has(token);
@@ -223,5 +260,5 @@ export async function startMockSupabase(port) {
   });
 
   await new Promise((resolve) => server.listen(port, resolve));
-  return { pool, mailbox, turnstileCalls, close: async () => { server.close(); await pool.end(); } };
+  return { pool, mailbox, turnstileCalls, aiCalls, aiControl, close: async () => { server.close(); await pool.end(); } };
 }

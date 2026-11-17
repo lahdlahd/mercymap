@@ -20,7 +20,7 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
 | 3 | Public and staff-assisted intake | Complete; live tests passed (see verification notes) |
 | 4 | Requests list, details, lifecycle, event history | Complete; live tests passed (see verification notes) |
 | 5 | Resources, matching, transactional allocation | Complete; migration applied live, live test steps skipped (see verification notes) |
-| 6 | AI analysis, summaries, recommendations, safeguarding flags | Not started |
+| 6 | AI analysis, summaries, recommendations, safeguarding flags | Built and tested locally; live tests pending |
 | 7 | Notifications and volunteer coordination | Not started |
 | 8 | Dashboard, Reports & Impact, exports | Not started |
 | 9 | Landing page and polish | Not started |
@@ -65,14 +65,32 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
   the project owner**; see [`docs/milestone-5-live-test-results.md`](docs/milestone-5-live-test-results.md).
   They are to be run in the Milestone 11 regression pass.
 
+- **Milestone 6.** AI suggestions with Anthropic Claude (default model
+  `claude-haiku-5-5`). The AI gives a summary, key facts, questions to ask,
+  urgency, a possible different kind of help, a possible safeguarding concern
+  and, when a request awaits a resource, which fitting resource to consider. It
+  never changes a status, approves, reserves or declines; the only thing it can
+  do on its own is raise "needs attention" on a never-flagged request, and only
+  a person can clear that. Only the description (with names, phone numbers and
+  emails removed), kind of help, quantity and area are sent; resources are
+  described without names or ids. A database keyword check flags safeguarding
+  words on every new request even when the AI is off. Accepting a suggested kind
+  of help is a staff action recorded in history and the audit log. Locally: 228
+  database tests (mutation-checked), 149 unit tests and five browser journeys
+  (60, 54, 54, 77 and 44 checks) against a fake Claude endpoint. **Live tests
+  pending:** [`docs/milestone-6-live-test.md`](docs/milestone-6-live-test.md).
+
 ## Secrets
 
 Server-only values (`SUPABASE_SECRET_KEY`, `INTAKE_HASH_SECRET`,
-`TURNSTILE_SECRET_KEY`) live only in `.env.local` locally and in the hosting
-provider's environment settings. They have no `NEXT_PUBLIC_` prefix, are read
-only in `server-only` modules, and `.env*` files other than `.env.example` are
-ignored by Git. The Supabase secret key is used for exactly two database
-functions, both of which validate their own input.
+`TURNSTILE_SECRET_KEY`, `ANTHROPIC_API_KEY`) live only in `.env.local` locally
+and in the hosting provider's environment settings. They have no `NEXT_PUBLIC_`
+prefix, are read only in `server-only` modules, and `.env*` files other than
+`.env.example` are ignored by Git. The Supabase secret key is used only for
+database functions granted to the service role, each of which validates its own
+input: `get_public_intake`, `submit_public_request`, `ai_claim` and `ai_save`.
+The Anthropic key is sent only in the `x-api-key` header to the Anthropic API;
+AI errors are stored as short codes, never response bodies.
 
 ## Repository layout
 

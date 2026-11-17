@@ -34,3 +34,25 @@ export function serverConfig(): ServerConfig | null {
       process.env.TURNSTILE_VERIFY_URL || "https://challenges.cloudflare.com/turnstile/v0/siteverify",
   };
 }
+
+export type AiConfig = {
+  apiKey: string;
+  model: string;
+  baseUrl: string;
+  supabaseSecretKey: string;
+};
+
+// The AI is optional. Without a key (or without the Supabase secret key the
+// runner needs) the app works as before and the request page says AI
+// suggestions are not set up.
+export function aiConfig(): AiConfig | null {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY;
+  if (!apiKey || !supabaseSecretKey) return null;
+  return {
+    apiKey,
+    supabaseSecretKey,
+    model: process.env.AI_MODEL || "claude-haiku-5-5",
+    baseUrl: (process.env.ANTHROPIC_BASE_URL || "https://api.anthropic.com").replace(/\/+$/, ""),
+  };
+}

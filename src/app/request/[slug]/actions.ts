@@ -1,6 +1,8 @@
 "use server";
 
 import { headers } from "next/headers";
+import { after } from "next/server";
+import { runAnalysis } from "@/lib/ai/run";
 import { clientIp, hashIp } from "@/lib/client-ip";
 import { fieldErrors } from "@/lib/validation";
 import type { FormState } from "@/lib/form-state";
@@ -76,5 +78,7 @@ export async function submitPublicRequestAction(
 
   const row = (data as Array<{ reference: string }> | null)?.[0];
   if (!row) return { message: "Your request could not be sent. Please try again.", values };
+  // AI suggestions for staff are prepared after the person has their answer.
+  after(() => runAnalysis(row.reference).then(() => undefined));
   return { ok: true, data: { reference: row.reference, method: d.contactMethod } };
 }

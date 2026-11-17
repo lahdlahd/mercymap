@@ -1,5 +1,7 @@
 "use server";
 
+import { after } from "next/server";
+import { runAnalysis } from "@/lib/ai/run";
 import { getCurrentUser, getMembership } from "@/lib/auth";
 import type { FormState } from "@/lib/form-state";
 import { intakeDbError, readRequestForm, redisplayValues, requestSchema } from "@/lib/intake";
@@ -40,5 +42,6 @@ export async function staffSubmitRequestAction(_state: FormState, formData: Form
   }
   const row = (data as Array<{ id: string; reference: string }> | null)?.[0];
   if (!row) return { message: "The request could not be saved. Please try again.", values };
+  after(() => runAnalysis(row.reference).then(() => undefined));
   return { ok: true, data: { reference: row.reference, id: row.id } };
 }
