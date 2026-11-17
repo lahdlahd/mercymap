@@ -232,7 +232,7 @@ try {
   const verifiedName = (await mock.pool.query(`select name from public.churches where status = 'verified'`)).rows[0].name;
   const verifiedSession = verifiedName.startsWith('Grace') ? owner : faith;
   await verifiedSession.go('/app');
-  check('the verified church sees its new status', /Your church is verified/.test(await verifiedSession.text()));
+  check('the verified church sees its live public request page', /Your public request page is live/.test(await verifiedSession.text()));
 
   // ------------------------------------------------------------------
   console.log('\nSign-out and password reset');

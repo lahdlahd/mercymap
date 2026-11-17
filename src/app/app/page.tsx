@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CopyButton } from "@/components/copy-button";
 import { Alert, buttonClass, Card } from "@/components/ui";
 import { canManageStaff, requireMembership } from "@/lib/auth";
 import { siteUrl } from "@/lib/env";
@@ -27,11 +28,30 @@ export default async function OverviewPage() {
         </Alert>
       ) : null}
       {church.status === "verified" ? (
-        <Alert tone="success" title="Your church is verified">
-          Your public request link is reserved: <span className="font-medium [overflow-wrap:anywhere]">{publicLink}</span>. The
-          request page itself is the next part of MERCYMAP to be switched on.
-        </Alert>
+        <Card>
+          <h2 className="text-lg font-bold text-charcoal">Your public request page is live</h2>
+          <p className="mt-1 text-sm text-muted">
+            Share this link so people can ask for help without creating an account.
+          </p>
+          <p className="mt-3 rounded-md border border-line bg-canvas p-3 font-mono text-sm [overflow-wrap:anywhere]">
+            {publicLink}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <CopyButton value={publicLink} />
+            <a href={`/request/${church.slug}`} target="_blank" rel="noopener" className={buttonClass("secondary")}>
+              Open the page
+            </a>
+          </div>
+        </Card>
       ) : null}
+
+      <Card>
+        <h2 className="text-lg font-bold text-charcoal">Someone at the church needs help?</h2>
+        <p className="mt-1 text-sm text-muted">Record their request for them. It joins the same list as online requests.</p>
+        <Link href="/app/requests/new" className={buttonClass("primary", "mt-4")}>
+          Record a request
+        </Link>
+      </Card>
 
       <Card>
         <h2 className="text-lg font-bold text-charcoal">Your team</h2>

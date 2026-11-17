@@ -9,6 +9,9 @@ import { createHmac, randomUUID } from 'node:crypto';
 import { createTestDatabase } from '../db/harness.mjs';
 
 const SECRET = 'local-e2e-secret';
+// The app's server-only Supabase secret key in the e2e build.
+export const E2E_SECRET_KEY = 'sb_secret_local_e2e';
+export const E2E_TURNSTILE_SECRET = 'e2e-turnstile-secret';
 const b64 = (v) => Buffer.from(typeof v === 'string' ? v : JSON.stringify(v)).toString('base64url');
 function signJwt(payload) {
   const head = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64(payload)}`;
@@ -25,6 +28,8 @@ export async function startMockSupabase(port) {
   const pool = await createTestDatabase('mercymap_e2e');
   const passwords = new Map(); // email -> password (test only)
   const mailbox = [];          // "emails" the tests can read: { type, email, userId }
+  const usedTokens = new Set(); // Turnstile tokens already verified (single use)
+  const turnstileCalls = [];
 
   const userJson = (u) => ({
     id: u.id, aud: 'authenticated', role: 'authenticated', email: u.email,
@@ -45,8 +50,9 @@ export async function startMockSupabase(port) {
     const client = await pool.connect();
     try {
       await client.query('begin');
-      await client.query(`set local role ${claims ? 'authenticated' : 'anon'}`);
-      if (claims) await client.query(`select set_config('request.jwt.claim.sub', $1, true)`, [claims.sub]);
+      const role = claims === 'service' ? 'service_role' : claims ? 'authenticated' : 'anon';
+      await client.query(`set local role ${role}`);
+      if (claims && claims !== 'service') await client.query(`select set_config('request.jwt.claim.sub', $1, true)`, [claims.sub]);
       const out = await fn(client);
       await client.query('commit');
       return out;
@@ -62,8 +68,13 @@ export async function startMockSupabase(port) {
     const url = new URL(req.url, 'http://x');
     const chunks = [];
     for await (const c of req) chunks.push(c);
-    const body = chunks.length ? JSON.parse(Buffer.concat(chunks).toString() || '{}') : {};
-    const claims = readJwt((req.headers.authorization ?? '').replace(/^Bearer /, ''));
+    const rawBody = Buffer.concat(chunks).toString();
+    const isForm = (req.headers['content-type'] ?? '').includes('application/x-www-form-urlencoded');
+    const body = isForm ? Object.fromEntries(new URLSearchParams(rawBody)) : rawBody ? JSON.parse(rawBody) : {};
+    const userClaims = readJwt((req.headers.authorization ?? '').replace(/^Bearer /, ''));
+    // Like Supabase: a signed-in user's token wins; otherwise the secret key
+    // means service_role and anything else means anon.
+    const claims = userClaims ?? (req.headers.apikey === E2E_SECRET_KEY ? 'service' : null);
     const send = (status, data) => {
       res.writeHead(status, { 'content-type': 'application/json' });
       res.end(data === undefined ? '' : JSON.stringify(data));
@@ -149,6 +160,40 @@ export async function startMockSupabase(port) {
           return send(200, rows);
         } catch (e) { return pgError(e); }
       }
+      if (path === '/turnstile/siteverify') {
+        const token = body.response ?? '';
+        const ok = body.secret === E2E_TURNSTILE_SECRET && token.startsWith('e2e-pass') && !usedTokens.has(token);
+        if (ok) usedTokens.add(token);
+        turnstileCalls.push({ token, remoteip: body.remoteip ?? null, ok });
+        return send(200, ok ? { success: true } : { success: false, 'error-codes': ['invalid-input-response'] });
+      }
+      if (path === '/rest/v1/categories' && req.method === 'GET') {
+        try {
+          const { rows } = await asUser(claims, (c) => c.query(
+            'select key, label from public.categories where is_active order by sort_order'));
+          return send(200, rows);
+        } catch (e) { return pgError(e); }
+      }
+      if (path === '/rest/v1/churches') {
+        const PROFILE = ['name', 'area', 'contact_phone', 'contact_email', 'emergency_guidance'];
+        try {
+          if (req.method === 'GET') {
+            const { rows } = await asUser(claims, (c) => c.query(
+              `select ${PROFILE.join(', ')} from public.churches where id = $1`, [eq('id')]));
+            if ((req.headers.accept ?? '').includes('vnd.pgrst.object')) {
+              return rows.length === 1 ? send(200, rows[0]) : send(406, { code: 'PGRST116', message: 'no rows' });
+            }
+            return send(200, rows);
+          }
+          if (req.method === 'PATCH') {
+            const keys = Object.keys(body).filter((k) => PROFILE.includes(k));
+            const sets = keys.map((k, i) => `${k} = $${i + 2}`).join(', ');
+            const { rows } = await asUser(claims, (c) => c.query(
+              `update public.churches set ${sets} where id = $1 returning id`, [eq('id'), ...keys.map((k) => body[k])]));
+            return send(200, rows);
+          }
+        } catch (e) { return pgError(e); }
+      }
       if (path === '/rest/v1/invitations') {
         try {
           if (req.method === 'GET') {
@@ -178,5 +223,5 @@ export async function startMockSupabase(port) {
   });
 
   await new Promise((resolve) => server.listen(port, resolve));
-  return { pool, mailbox, close: async () => { server.close(); await pool.end(); } };
+  return { pool, mailbox, turnstileCalls, close: async () => { server.close(); await pool.end(); } };
 }

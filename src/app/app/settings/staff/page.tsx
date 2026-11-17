@@ -40,9 +40,9 @@ export default async function StaffPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-charcoal">Staff</h1>
+        <h2 className="text-lg font-bold text-charcoal">Staff</h2>
         <p className="mt-1 text-sm text-muted">
           Owners manage roles. Administrators can invite and remove coordinators. Coordinators review and coordinate
           requests.

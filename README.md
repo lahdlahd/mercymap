@@ -17,7 +17,7 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
 |---|---|---|
 | 1 | Database schema, RLS, tenant isolation, security tests | Complete (see verification notes) |
 | 2 | Authentication, church creation, verification, staff invitations | Complete; live tests passed (see verification notes) |
-| 3 | Public and staff-assisted intake | Not started |
+| 3 | Public and staff-assisted intake | Complete; live tests passed (see verification notes) |
 | 4 | Requests list, details, lifecycle, event history | Not started |
 | 5 | Resources, matching, transactional allocation | Not started |
 | 6 | AI analysis, summaries, recommendations, safeguarding flags | Not started |
@@ -41,6 +41,20 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
   against the live Supabase project on 16–17 Nov 2026 and every step passed; see
   [`docs/milestone-2-live-test-results.md`](docs/milestone-2-live-test-results.md),
   including the limitations carried forward.
+
+- **Milestone 3.** Locally: 128 database tests, 84 unit tests and two browser
+  journeys (60 and 54 checks), including a scan for secrets in browser code.
+  Live: every step of the test script passed against the live Supabase project
+  on 17 Nov 2026; see [`docs/milestone-3-live-test-results.md`](docs/milestone-3-live-test-results.md).
+
+## Secrets
+
+Server-only values (`SUPABASE_SECRET_KEY`, `INTAKE_HASH_SECRET`,
+`TURNSTILE_SECRET_KEY`) live only in `.env.local` locally and in the hosting
+provider's environment settings. They have no `NEXT_PUBLIC_` prefix, are read
+only in `server-only` modules, and `.env*` files other than `.env.example` are
+ignored by Git. The Supabase secret key is used for exactly two database
+functions, both of which validate their own input.
 
 ## Repository layout
 
