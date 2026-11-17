@@ -1,0 +1,54 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/manrope";
+
+/* MERCYMAP design tokens */
+@theme {
+  --color-forest: #174d3a;
+  --color-forest-dark: #113a2c;
+  --color-emerald: #267653;
+  --color-ivory: #faf8f2;
+  --color-gold: #c5a15b;
+  --color-charcoal: #26332d;
+  --color-muted: #5b6b63;
+  --color-sage: #e5efe8;
+  --color-line: #dfe5e0;
+  --color-lightgrey: #eef1ee;
+  --color-canvas: #f7f8f5;
+
+  /* Status colours. The -ink variants are for text on light backgrounds. */
+  --color-success: #23845b;
+  --color-success-ink: #17603f;
+  --color-pending: #d69b32;
+  --color-pending-ink: #7a5410;
+  --color-pending-soft: #fbf3e2;
+  --color-danger: #c84c4c;
+  --color-danger-ink: #9b2c2c;
+  --color-danger-soft: #fbeaea;
+  --color-progress: #3979b9;
+
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Manrope Variable", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-charcoal);
+  font-family: var(--font-sans);
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-emerald);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

@@ -16,7 +16,7 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
 | # | Milestone | Status |
 |---|---|---|
 | 1 | Database schema, RLS, tenant isolation, security tests | Complete (see verification notes) |
-| 2 | Authentication, church creation, verification, staff invitations | Not started |
+| 2 | Authentication, church creation, verification, staff invitations | Complete; live tests passed (see verification notes) |
 | 3 | Public and staff-assisted intake | Not started |
 | 4 | Requests list, details, lifecycle, event history | Not started |
 | 5 | Resources, matching, transactional allocation | Not started |
@@ -36,11 +36,24 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
   24 policies, 9 categories). **The behavioural test suite has not been run
   against the live Supabase project; that verification is still outstanding.**
 
+- **Milestone 2.** Locally: 112 database tests, 45 unit tests and a 60-check
+  browser journey against a mock Supabase API. Live: the full test script was run
+  against the live Supabase project on 16–17 Nov 2026 and every step passed; see
+  [`docs/milestone-2-live-test-results.md`](docs/milestone-2-live-test-results.md),
+  including the limitations carried forward.
+
 ## Repository layout
 
 ```
+src/app/               Pages, route handlers and server actions
+src/components/        Shared interface components
+src/lib/               Validation, auth helpers, Supabase clients
+src/proxy.ts           Refreshes the session on every request
 supabase/migrations/   SQL migrations, applied in filename order
 tests/db/              Database security and integrity tests
+tests/unit/            Unit tests
+tests/e2e/             Browser journey against a mock Supabase API
+docs/                  Live test scripts
 ```
 
 ## Database security model
@@ -56,18 +69,30 @@ tests/db/              Database security and integrity tests
 - Stock is never stored as a counter: `available = total - reserved - fulfilled`,
   computed from `allocations` and guarded by a row lock on the resource.
 
-## Running the database tests
-
-Requires Node 22+ and any PostgreSQL 15+ server you can create databases on.
-The tests build throwaway databases, apply a small stand-in for Supabase's
-`auth` schema and roles, then apply every migration.
+## Running locally
 
 ```bash
 npm install
-TEST_DATABASE_URL=postgres://postgres@localhost:5432/postgres npm run test:db
+cp .env.example .env.local   # project URL and publishable key only
+npm run dev
 ```
+
+## Tests
+
+```bash
+npm run lint && npm run typecheck
+npm test                                  # unit tests
+TEST_DATABASE_URL=postgres://postgres@localhost:5432/postgres npm run test:db
+TEST_DATABASE_URL=postgres://postgres@localhost:5432/postgres npm run test:e2e   # also needs Chrome (CHROME_PATH)
+```
+
+The database and end-to-end tests need any PostgreSQL 15+ server you can create
+databases on. They build throwaway databases, apply a small stand-in for
+Supabase's `auth` schema and roles, then apply every migration. The end-to-end
+journey fakes Supabase Auth, so it does not replace live testing.
 
 ## Applying the migrations to Supabase
 
-With the Supabase CLI linked to your project: `supabase db push`.
+With the Supabase CLI linked to your project: `supabase db push`, or paste each
+file into the SQL Editor in filename order.
 All demo and test data in this repository is fictional.
