@@ -36,8 +36,11 @@ describe('the transition rules', () => {
         const expected = (RULES.transitions[from] ?? []).includes(to);
         assert.equal(rows[0].ok, expected, `${from} -> ${to}`);
       }
-      const { rows } = await pool.query('select private.request_status_needs_note($1) as n', [from]);
-      assert.equal(rows[0].n, RULES.noteRequired.includes(from), `note for ${from}`);
+      for (const to of ALL_STATUSES) {
+        const { rows: n } = await pool.query('select private.request_change_needs_note($1, $2) as n', [from, to]);
+        const expectedNote = RULES.noteRequired.includes(to) || (RULES.allocatedStatuses.includes(from) && to !== 'in_progress');
+        assert.equal(n[0].n, expectedNote, `note for ${from} -> ${to}`);
+      }
     }
   });
 
@@ -45,7 +48,8 @@ describe('the transition rules', () => {
     for (const [from, targets] of Object.entries(RULES.transitions)) {
       for (const to of targets) {
         const r = await newRequest(s.grace, from);
-        const note = RULES.noteRequired.includes(to) ? `Reason for ${to}` : null;
+        const needs = RULES.noteRequired.includes(to) || (RULES.allocatedStatuses.includes(from) && to !== 'in_progress');
+        const note = needs ? `Reason for ${to}` : null;
         const { rows } = await change(s.u.graceCoord, r.id, from, to, note);
         assert.equal(rows[0].s, to);
         const now = await statusOf(r.id);
@@ -58,17 +62,20 @@ describe('the transition rules', () => {
     }
   });
 
-  test('approved, in progress and fulfilled cannot be set by hand', async () => {
+  test('approved and fulfilled cannot be set by hand; in progress only from approved', async () => {
     const r = await newRequest(s.grace, 'awaiting_match');
-    for (const to of ['approved', 'in_progress', 'fulfilled']) {
+    for (const to of ['approved', 'fulfilled']) {
       await db.rejects(s.u.graceOwner, 'select public.change_request_status($1, $2, $3, $4)',
         [r.id, 'awaiting_match', to, 'x'], /requires_allocation/);
     }
+    await db.rejects(s.u.graceOwner, 'select public.change_request_status($1, $2, $3, $4)',
+      [r.id, 'awaiting_match', 'in_progress', 'x'], /invalid_transition/);
     assert.equal((await statusOf(r.id)).status, 'awaiting_match');
   });
 
   test('changes outside the rules are refused, including from closed requests', async () => {
     const cases = [['submitted', 'awaiting_match'], ['submitted', 'unable_to_fulfil'], ['awaiting_clarification', 'awaiting_match'],
+      ['in_progress', 'declined'], ['in_progress', 'under_review'], ['fulfilled', 'cancelled'], ['approved', 'under_review'],
       ['declined', 'under_review'], ['cancelled', 'submitted'], ['unable_to_fulfil', 'under_review'], ['submitted', 'nonsense']];
     for (const [from, to] of cases) {
       const r = await newRequest(s.grace, from);

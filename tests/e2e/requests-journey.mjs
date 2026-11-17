@@ -168,7 +168,7 @@ try {
   await owner.press('Update status');
   t = await owner.text();
   check('ready for a resource', (await statusOf(a.id)).status === 'awaiting_match');
-  check('explains that approval needs a reserved resource', /Approval happens when a resource is reserved/.test(t));
+  check('explains that no resource can meet it yet', /No resource can meet this request right now/.test(t));
   const offered3 = await owner.page.$$eval('input[name="toStatus"]', (els) => els.map((e) => e.value));
   check('no way to approve by hand', !offered3.includes('approved') && !offered3.includes('fulfilled'));
 

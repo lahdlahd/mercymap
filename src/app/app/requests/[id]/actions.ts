@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import type { FormState } from "@/lib/form-state";
 import { isRequestStatus, needsNote, requestDbError, STATUS_LABEL } from "@/lib/requests";
@@ -20,11 +21,18 @@ async function run(requestId: string, fn: (supabase: Awaited<ReturnType<typeof c
   const path = `/app/requests/${requestId}`;
   if (error) {
     console.error("request action failed:", error.code ?? "unknown");
-    if (/status_changed/.test(error.message)) revalidatePath(path);
+    // Someone else moved the request on. The form that was used may no longer
+    // be on the page, so the notice is shown by the page itself.
+    if (/status_changed/.test(error.message)) {
+      revalidatePath(path);
+      redirect(`${path}?changed=1`);
+    }
+    if (/resource_|insufficient_available/.test(error.message)) revalidatePath(path);
     return { message: requestDbError(error.message) };
   }
   revalidatePath(path);
   revalidatePath("/app/requests");
+  revalidatePath("/app/resources", "layout");
   return { ok: true, message: ok };
 }
 
@@ -41,7 +49,7 @@ export async function changeStatusAction(
   const note = text(formData, "note").slice(0, 1000);
   if (!isRequestStatus(to)) return { fieldErrors: { toStatus: "Choose what happens next." }, values: { note } };
   if (!isRequestStatus(from)) return { message: "Refresh the page and try again." };
-  if (needsNote(to) && note.length < 3) {
+  if (needsNote(from, to) && note.length < 3) {
     return { fieldErrors: { note: "Please add a short note explaining this." }, values: { toStatus: to, note } };
   }
   return run(requestId, (s) => s.rpc("change_request_status", {
@@ -67,4 +75,23 @@ export async function acknowledgeAttentionAction(requestId: string, _state: Form
   if (note.length < 3) return { fieldErrors: { note: "Record what was done or decided." } };
   return run(requestId, (s) => s.rpc("acknowledge_request_attention", { p_request_id: requestId, p_note: note }),
     "Recorded as reviewed.");
+}
+
+// Approval and reservation happen together in one database transaction.
+export async function approveAction(requestId: string, from: string, _state: FormState, formData: FormData): Promise<FormState> {
+  const resourceId = text(formData, "resourceId");
+  const note = text(formData, "note").slice(0, 1000);
+  if (!uuidSchema.safeParse(resourceId).success) {
+    return { fieldErrors: { resourceId: "Choose a resource to reserve." }, values: { note } };
+  }
+  return run(requestId, (s) => s.rpc("approve_allocation", {
+    p_request_id: requestId, p_from_status: from, p_resource_id: resourceId, p_note: note || null,
+  }), "Approved. The stock is reserved for this request.");
+}
+
+export async function fulfilAction(requestId: string, from: string, _state: FormState, formData: FormData): Promise<FormState> {
+  const note = text(formData, "note").slice(0, 1000);
+  return run(requestId, (s) => s.rpc("record_fulfilment", {
+    p_request_id: requestId, p_from_status: from, p_note: note || null,
+  }), "Recorded as fulfilled.");
 }

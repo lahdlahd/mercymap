@@ -19,7 +19,7 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
 | 2 | Authentication, church creation, verification, staff invitations | Complete; live tests passed (see verification notes) |
 | 3 | Public and staff-assisted intake | Complete; live tests passed (see verification notes) |
 | 4 | Requests list, details, lifecycle, event history | Complete; live tests passed (see verification notes) |
-| 5 | Resources, matching, transactional allocation | Not started |
+| 5 | Resources, matching, transactional allocation | Built and tested locally; live tests pending |
 | 6 | AI analysis, summaries, recommendations, safeguarding flags | Not started |
 | 7 | Notifications and volunteer coordination | Not started |
 | 8 | Dashboard, Reports & Impact, exports | Not started |
@@ -51,6 +51,17 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
   journeys (60, 54 and 54 checks). Live: every step of the test script passed
   against the live Supabase project on 17 Nov 2026; see
   [`docs/milestone-4-live-test-results.md`](docs/milestone-4-live-test-results.md).
+
+- **Milestone 5.** Locally: 197 database tests (including concurrent approvals
+  of the same request and of competing requests for the last stock), 126 unit
+  tests and four browser journeys (60, 54, 54 and 77 checks). Approval and
+  reservation happen in one database transaction that locks the request and the
+  resource; leaving Approved or In progress for any outcome other than delivery
+  returns the stock and needs a note. Matching rules are fixed: same church,
+  same kind of help, active, within its dates, enough available, covers the
+  area (no areas = any area). Also fixes a Milestone 3 bug where text lost a
+  leading or trailing letter "v". **Live tests pending:**
+  [`docs/milestone-5-live-test.md`](docs/milestone-5-live-test.md).
 
 ## Secrets
 
