@@ -19,7 +19,7 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
 | 2 | Authentication, church creation, verification, staff invitations | Complete; live tests passed (see verification notes) |
 | 3 | Public and staff-assisted intake | Complete; live tests passed (see verification notes) |
 | 4 | Requests list, details, lifecycle, event history | Complete; live tests passed (see verification notes) |
-| 5 | Resources, matching, transactional allocation | Built and tested locally; live tests pending |
+| 5 | Resources, matching, transactional allocation | Complete; migration applied live, live test steps skipped (see verification notes) |
 | 6 | AI analysis, summaries, recommendations, safeguarding flags | Not started |
 | 7 | Notifications and volunteer coordination | Not started |
 | 8 | Dashboard, Reports & Impact, exports | Not started |
@@ -60,8 +60,10 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
   returns the stock and needs a note. Matching rules are fixed: same church,
   same kind of help, active, within its dates, enough available, covers the
   area (no areas = any area). Also fixes a Milestone 3 bug where text lost a
-  leading or trailing letter "v". **Live tests pending:**
-  [`docs/milestone-5-live-test.md`](docs/milestone-5-live-test.md).
+  leading or trailing letter "v". Live: the migration was applied and its check
+  passed on 17 Nov 2026, but **the 25 live test steps were skipped by decision of
+  the project owner**; see [`docs/milestone-5-live-test-results.md`](docs/milestone-5-live-test-results.md).
+  They are to be run in the Milestone 11 regression pass.
 
 ## Secrets
 
