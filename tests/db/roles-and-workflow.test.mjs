@@ -142,23 +142,10 @@ describe('invitations', () => {
 });
 
 describe('requests', () => {
-  const insert = (actor, extraCols = '', extraVals = '', params = []) => db.run(actor,
-    `insert into public.requests (church_id, channel, created_by, category_key, original_text, consent_given_at${extraCols})
-     values ($1, $2, $3, 'food', 'Visitor needs groceries.', now()${extraVals}) returning id, status, reference`, params);
-
-  test('staff-assisted submission is recorded with its author and starts as submitted', async () => {
-    const { rows } = await insert(s.u.graceCoord, '', '', [s.grace, 'staff', s.u.graceCoord]);
-    assert.equal(rows[0].status, 'submitted');
-    assert.match(rows[0].reference, /^MM-[0-9A-F]{6}-[0-9A-F]{6}$/);
-  });
-  test('staff cannot pose as the public channel or as another author', async () => {
-    await assert.rejects(insert(s.u.graceCoord, '', '', [s.grace, 'public', null]), DENIED);
-    await assert.rejects(insert(s.u.graceCoord, '', '', [s.grace, 'staff', s.u.graceOwner]), DENIED);
-  });
-  test('status, reference and attention fields cannot be set on insert', async () => {
-    await assert.rejects(insert(s.u.graceCoord, ', status', `, 'fulfilled'`, [s.grace, 'staff', s.u.graceCoord]), DENIED);
-    await assert.rejects(insert(s.u.graceCoord, ', reference', `, 'MM-CHOSEN'`, [s.grace, 'staff', s.u.graceCoord]), DENIED);
-    await assert.rejects(insert(s.u.graceCoord, ', attention_flag', `, true`, [s.grace, 'staff', s.u.graceCoord]), DENIED);
+  test('staff cannot insert requests directly; they must use staff_submit_request', async () => {
+    await db.rejects(s.u.graceCoord,
+      `insert into public.requests (church_id, channel, created_by, category_key, original_text, consent_given_at)
+       values ($1, 'staff', $2, 'food', 'Visitor needs groceries.', now())`, [s.grace, s.u.graceCoord], DENIED);
   });
   test('members cannot update or delete requests directly', async () => {
     await db.rejects(s.u.graceOwner, `update public.requests set status = 'fulfilled' where church_id = $1`, [s.grace], DENIED);
