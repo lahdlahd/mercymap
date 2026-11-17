@@ -188,6 +188,7 @@ try {
   t = await second.text();
   check('a stale page cannot overwrite a newer change', /Someone else changed this request/.test(t) && (await statusOf(b.id)).status === 'under_review');
   check('the stale page refreshes to the current status', /Under review/.test(t));
+  check('the note label no longer describes the old choice', !/Why is it being cancelled\?/.test(t) && /Note \(optional\)/.test(t));
 
   await choose(owner, 'unable_to_fulfil');
   await owner.page.type('form textarea[name="note"]', 'No clothing in the right sizes this month.');

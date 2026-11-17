@@ -8,7 +8,11 @@ import { ACTION_LABEL, actionLabel, needsNote, type RequestStatus } from "@/lib/
 type Action = (state: FormState, formData: FormData) => Promise<FormState>;
 
 export function StatusForm({ action, status, options }: { action: Action; status: RequestStatus; options: RequestStatus[] }) {
-  const [choice, setChoice] = useState<RequestStatus | null>(null);
+  // The choice belongs to the status it was made on. If the page refreshes to
+  // a new status (after a change, or someone else's), the old choice is dropped
+  // so the note label never describes an option that is no longer selected.
+  const [picked, setPicked] = useState<{ on: RequestStatus; value: RequestStatus } | null>(null);
+  const choice = picked && picked.on === status ? picked.value : null;
   const prompt = choice ? ACTION_LABEL[choice]?.notePrompt : undefined;
   const required = choice ? needsNote(choice) : false;
   return (
@@ -21,7 +25,7 @@ export function StatusForm({ action, status, options }: { action: Action; status
           const a = actionLabel(status, o);
           return { value: o, label: a.label, hint: a.help };
         })}
-        onChange={(v) => setChoice(v as RequestStatus)}
+        onChange={(v) => setPicked({ on: status, value: v as RequestStatus })}
       />
       <TextAreaField
         key={`note-${status}`}
