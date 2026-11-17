@@ -62,6 +62,7 @@ const badgeTones = {
   pending: "bg-pending-soft text-pending-ink",
   danger: "bg-danger-soft text-danger-ink",
   neutral: "bg-lightgrey text-charcoal",
+  info: "bg-[#e8f0f8] text-[#245a8c]",
 } as const;
 
 export function Badge({ tone = "neutral", children }: { tone?: keyof typeof badgeTones; children: ReactNode }) {

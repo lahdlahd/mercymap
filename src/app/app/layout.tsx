@@ -6,6 +6,7 @@ import { requireMembership } from "@/lib/auth";
 // Navigation grows as each milestone delivers a working section.
 const NAV = [
   { href: "/app", label: "Overview" },
+  { href: "/app/requests", label: "Requests" },
   { href: "/app/requests/new", label: "Record a request" },
   { href: "/app/settings", label: "Settings" },
 ];

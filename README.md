@@ -18,7 +18,7 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
 | 1 | Database schema, RLS, tenant isolation, security tests | Complete (see verification notes) |
 | 2 | Authentication, church creation, verification, staff invitations | Complete; live tests passed (see verification notes) |
 | 3 | Public and staff-assisted intake | Complete; live tests passed (see verification notes) |
-| 4 | Requests list, details, lifecycle, event history | Not started |
+| 4 | Requests list, details, lifecycle, event history | Complete; live tests passed (see verification notes) |
 | 5 | Resources, matching, transactional allocation | Not started |
 | 6 | AI analysis, summaries, recommendations, safeguarding flags | Not started |
 | 7 | Notifications and volunteer coordination | Not started |
@@ -46,6 +46,11 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
   journeys (60 and 54 checks), including a scan for secrets in browser code.
   Live: every step of the test script passed against the live Supabase project
   on 17 Nov 2026; see [`docs/milestone-3-live-test-results.md`](docs/milestone-3-live-test-results.md).
+
+- **Milestone 4.** Locally: 154 database tests, 99 unit tests and three browser
+  journeys (60, 54 and 54 checks). Live: every step of the test script passed
+  against the live Supabase project on 17 Nov 2026; see
+  [`docs/milestone-4-live-test-results.md`](docs/milestone-4-live-test-results.md).
 
 ## Secrets
 
