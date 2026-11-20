@@ -11,6 +11,7 @@ export const metadata: Metadata = { title: "Platform administration", robots: { 
 type Church = {
   id: string; name: string; slug: string; status: "pending" | "verified" | "suspended";
   area: string | null; owner_email: string | null; created_at: string; verified_at: string | null;
+  is_member: boolean;
 };
 
 const formatDate = (iso: string) =>
@@ -26,7 +27,7 @@ export default async function PlatformPage() {
   const churches = (data ?? []) as Church[];
 
   return (
-    <main className="flex-1 bg-canvas px-5 py-8">
+    <main id="main" tabIndex={-1} className="flex-1 bg-canvas px-5 py-8">
       <div className="mx-auto max-w-4xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -58,6 +59,11 @@ export default async function PlatformPage() {
                 <div><dt className="inline text-muted">Registered by: </dt><dd className="inline break-all">{c.owner_email ?? "Unknown"}</dd></div>
                 <div><dt className="inline text-muted">Registered: </dt><dd className="inline">{formatDate(c.created_at)}</dd></div>
               </dl>
+              {c.is_member ? (
+                <p className="rounded-lg bg-lightgrey p-3 text-sm text-muted" data-own-church="">
+                  You belong to this church, so another platform administrator must review it.
+                </p>
+              ) : (
               <div className="flex flex-wrap gap-2">
                 {c.status !== "verified" ? (
                   <ActionForm action={setChurchStatusAction} confirm={`Verify ${c.name}? Its public request link will be allowed to go live.`}>
@@ -74,6 +80,7 @@ export default async function PlatformPage() {
                   </ActionForm>
                 ) : null}
               </div>
+              )}
             </Card>
           ))
         )}

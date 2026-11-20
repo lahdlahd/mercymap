@@ -29,7 +29,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       <aside className="bg-forest text-white md:w-64 md:shrink-0">
         <div className="flex items-center justify-between px-5 py-4 md:block">
           <Link href="/app" aria-label="MERCYMAP overview">
-            <Wordmark />
+            <Wordmark onDark />
           </Link>
           <p className="truncate text-sm text-white/80 md:mt-4" title={church.name}>
             {church.name}
@@ -81,7 +81,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           </form>
           </div>
         </header>
-        <main className="flex-1 px-5 py-6 sm:px-8">{children}</main>
+        <main id="main" tabIndex={-1} className="flex-1 px-5 py-6 sm:px-8">{children}</main>
       </div>
     </div>
   );

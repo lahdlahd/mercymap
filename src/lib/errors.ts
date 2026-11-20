@@ -14,6 +14,7 @@ const DB_MESSAGES: Array<[RegExp, string]> = [
   [/cannot_remove_self/, "You cannot remove yourself."],
   [/last_owner_required/, "A church must always have at least one owner."],
   [/church_not_found/, "That church could not be found."],
+  [/own_church/, "You belong to this church, so another platform administrator must review it."],
   [/forbidden|row-level security|permission denied/, "You do not have permission to do that."],
   [/not_authenticated/, "Your session has ended. Sign in again."],
 ];

@@ -128,7 +128,7 @@ try {
   let t = await visitor.text();
   const refA = t.match(/MM-[0-9A-F]{6}-[0-9A-F]{6}/)?.[0];
   check('the person gets their reference straight away', Boolean(refA) && /Your request has been sent/.test(t));
-  check('nothing about AI is shown to the person', !/AI|analys/i.test(t));
+  check('nothing about AI is shown to the person', !/\bAI\b|analys/i.test(t));
   const a = await aiDone(refA);
   check('analysis runs on its own after submission', a?.ai_status === 'done', a?.ai_status);
 

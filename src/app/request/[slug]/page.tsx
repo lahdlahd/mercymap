@@ -44,7 +44,7 @@ export default async function PublicRequestPage({ params }: { params: Promise<{ 
   const { church, categories } = intake;
 
   return (
-    <main className="flex-1 bg-ivory">
+    <main id="main" tabIndex={-1} className="flex-1 bg-ivory">
       <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:py-12">
         <header>
           <p className="text-sm font-semibold uppercase tracking-wide text-emerald">Request help</p>

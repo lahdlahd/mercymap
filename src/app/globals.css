@@ -9,6 +9,9 @@
   --color-emerald: #267653;
   --color-ivory: #faf8f2;
   --color-gold: #c5a15b;
+  /* Gold for text: darker on light backgrounds, lighter on forest, both >= 4.5:1. */
+  --color-gold-ink: #8a6a26;
+  --color-gold-light: #dcc184;
   --color-charcoal: #26332d;
   --color-muted: #5b6b63;
   --color-sage: #e5efe8;

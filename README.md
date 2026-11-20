@@ -23,8 +23,8 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
 | 6 | AI analysis, summaries, recommendations, safeguarding flags | Complete; migration applied live, partly tested live (no Anthropic key yet; see verification notes) |
 | 7 | Notifications and volunteer coordination | Complete; all live tests passed 20 Nov 2026 |
 | 8 | Dashboard, Reports & Impact, exports | Complete; live tests passed 20 Nov 2026 |
-| 9 | Landing page and polish | Not started |
-| 10 | Optional voice recording and transcription | Not started |
+| 9 | Landing page and polish | Built and tested locally; live tests pending |
+| 10 | Voice recording and transcription | Deferred (decision of 20 Nov 2026): stays on the roadmap as an accessibility feature, to be built after the main product and demo are ready |
 | 11 | Demo data, regression testing, demo preparation | Not started |
 
 ### Verification notes
@@ -113,6 +113,21 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
   Live, 20 Nov 2026: passed against the real Supabase project (coordinator view
   and SQL comparison skipped); see
   [`docs/milestone-8-live-test-results.md`](docs/milestone-8-live-test-results.md).
+
+- **Milestone 9.** Landing page with Matthew 25:40 (World English Bible, public
+  domain) and its reference, How it works, features, safety and a "Looking for
+  help?" section that sends people to their church's own link (no public
+  directory of churches). Polish: page titles on every page, link previews
+  (Open Graph and Twitter tags, a generated 1200×630 image), robots rules that
+  keep request pages and the app out of search, a skip link and focusable main
+  region, a contrast-safe wordmark, a valid structure for the overview tiles,
+  and the 404 title. Milestone 2 fixes: a platform administrator cannot change
+  the status of a church they belong to, and "Register your church" shows any
+  live invitation to the person's own email. Locally: 276 database tests, 169
+  unit tests and eight browser journeys, including axe-core accessibility
+  checks with no violations on 18 public and staff pages and phone-layout
+  checks on each. **Live tests pending:**
+  [`docs/milestone-9-live-test.md`](docs/milestone-9-live-test.md).
 
 ## Secrets
 
