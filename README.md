@@ -23,7 +23,7 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
 | 6 | AI analysis, summaries, recommendations, safeguarding flags | Complete; migration applied live, partly tested live (no Anthropic key yet; see verification notes) |
 | 7 | Notifications and volunteer coordination | Complete; all live tests passed 20 Nov 2026 |
 | 8 | Dashboard, Reports & Impact, exports | Complete; live tests passed 20 Nov 2026 |
-| 9 | Landing page and polish | Built and tested locally; live tests pending |
+| 9 | Landing page and polish | Complete; all live tests passed 20 Nov 2026 |
 | 10 | Voice recording and transcription | Deferred (decision of 20 Nov 2026): stays on the roadmap as an accessibility feature, to be built after the main product and demo are ready |
 | 11 | Demo data, regression testing, demo preparation | Not started |
 
@@ -126,8 +126,8 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
   live invitation to the person's own email. Locally: 276 database tests, 169
   unit tests and eight browser journeys, including axe-core accessibility
   checks with no violations on 18 public and staff pages and phone-layout
-  checks on each. **Live tests pending:**
-  [`docs/milestone-9-live-test.md`](docs/milestone-9-live-test.md).
+  checks on each. Live, 20 Nov 2026: every step passed
+  ([`docs/milestone-9-live-test-results.md`](docs/milestone-9-live-test-results.md)).
 
 ## Secrets
 
