@@ -261,7 +261,19 @@ export function ChoiceGroup({
   );
 }
 
-export function CheckboxField({ name, label, required }: { name: string; label: React.ReactNode; required?: boolean }) {
+export function CheckboxField({
+  name,
+  label,
+  required,
+  defaultChecked,
+  onChange,
+}: {
+  name: string;
+  label: React.ReactNode;
+  required?: boolean;
+  defaultChecked?: boolean;
+  onChange?: (checked: boolean) => void;
+}) {
   const id = useId();
   const { error } = useField(name);
   return (
@@ -272,6 +284,8 @@ export function CheckboxField({ name, label, required }: { name: string; label: 
           type="checkbox"
           name={name}
           required={required}
+          defaultChecked={defaultChecked}
+          onChange={onChange ? (e) => onChange(e.currentTarget.checked) : undefined}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${id}-error` : undefined}
           className="mt-0.5 h-5 w-5 shrink-0 accent-forest"

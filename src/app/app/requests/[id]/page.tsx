@@ -20,6 +20,8 @@ import { createClient } from "@/lib/supabase/server";
 import { uuidSchema } from "@/lib/validation";
 import { acknowledgeAttentionAction, addNoteAction, approveAction, changeStatusAction, flagAttentionAction, fulfilAction } from "./actions";
 import { AiPanel, type AiDetail } from "./ai-panel";
+import { TasksPanel } from "./tasks-panel";
+import { defaultBrief, type Assignment, type Volunteer } from "@/lib/volunteers";
 import { AcknowledgeForm, ApproveForm, ClearChangedNotice, FlagForm, FulfilForm, NoteForm, StatusForm, type Candidate } from "./forms";
 
 export const metadata: Metadata = { title: "Request", robots: { index: false, follow: false } };
@@ -67,6 +69,7 @@ type Detail = {
   } | null;
   attention_acknowledged_by_email: string | null;
   ai: AiDetail;
+  assignments: Assignment[];
   events: Array<{
     id: string;
     event_type: string;
@@ -101,6 +104,24 @@ export default async function RequestDetailPage({
   const suspended = membership.church.status === "suspended";
   const allocation = d.allocation;
   const aiEnabled = aiConfig() !== null;
+  // "Or" only makes sense under another action: approving, or recording delivery.
+  const hasPrimaryAction =
+    r.status === "awaiting_match" ||
+    ((r.status === "approved" || r.status === "in_progress") && allocation?.status === "reserved");
+  const assignments = d.assignments ?? [];
+  let volunteers: Array<{ id: string; name: string }> = [];
+  if ((r.status === "approved" || r.status === "in_progress") && !suspended) {
+    const v = await supabase.rpc("list_volunteers", { p_church_id: membership.church.id, p_include_inactive: false });
+    volunteers = ((v.data ?? []) as Volunteer[]).map((x) => ({ id: x.id, name: x.full_name }));
+  }
+  const baseBrief = defaultBrief({
+    reference: r.reference,
+    categoryLabel: allocation?.resource_name ?? d.category_label,
+    quantity: allocation?.quantity ?? r.quantity_needed,
+    unit: allocation?.unit,
+    area: r.area,
+    churchName: membership.church.name,
+  });
 
   let candidates: Candidate[] | null = null;
   if (r.status === "awaiting_match" && !suspended) {
@@ -191,6 +212,16 @@ export default async function RequestDetailPage({
             claimedAt={r.ai_claimed_at}
           />
 
+          <TasksPanel
+            requestId={r.id}
+            status={r.status}
+            assignments={assignments}
+            volunteers={volunteers}
+            baseBrief={baseBrief}
+            requesterPhone={r.contact_method === "phone_call" || r.contact_method === "sms" ? r.contact_value : null}
+            suspended={suspended}
+          />
+
           <Card>
             <h2 className="text-lg font-bold text-charcoal">Details</h2>
             <dl className="mt-3 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
@@ -259,10 +290,8 @@ export default async function RequestDetailPage({
                       <FulfilForm action={fulfilAction.bind(null, r.id, r.status)} />
                     </div>
                   ) : null}
-                  <div className={r.status === "awaiting_match" || r.status === "approved" || r.status === "in_progress" ? "border-t border-line pt-5" : undefined}>
-                    {r.status === "awaiting_match" || r.status === "approved" || r.status === "in_progress" ? (
-                      <h3 className="mb-2 font-semibold text-charcoal">Or</h3>
-                    ) : null}
+                  <div className={hasPrimaryAction ? "border-t border-line pt-5" : undefined}>
+                    {hasPrimaryAction ? <h3 className="mb-2 font-semibold text-charcoal">Or</h3> : null}
                     <StatusForm action={changeStatusAction.bind(null, r.id, r.status)} status={r.status} options={options} />
                   </div>
                 </div>

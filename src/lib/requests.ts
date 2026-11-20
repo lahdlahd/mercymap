@@ -114,6 +114,8 @@ export const EVENT_LABEL: Record<string, string> = {
   attention_flagged: "Safeguarding concern raised",
   attention_acknowledged: "Safeguarding concern reviewed",
   category_changed: "Kind of help changed",
+  volunteer_assigned: "Volunteer given the task",
+  volunteer_task_updated: "Volunteer task updated",
 };
 
 // Tabs on the Requests page. "attention" is a filter, not a status.
@@ -143,6 +145,11 @@ export function requestDbError(message: string | undefined): string {
   if (/already_flagged/.test(text)) return "A safeguarding concern is already open on this request.";
   if (/not_flagged/.test(text)) return "There is no open safeguarding concern to review.";
   if (/church_suspended/.test(text)) return "This workspace is suspended, so requests cannot be changed.";
+  if (/volunteer_not_found/.test(text)) return "That volunteer could not be found.";
+  if (/volunteer_inactive/.test(text)) return "That volunteer is marked as not available.";
+  if (/already_assigned/.test(text)) return "That volunteer already has an open task for this request.";
+  if (/not_approved/.test(text)) return "Volunteers can only be given approved requests.";
+  if (/invalid_brief/.test(text)) return "Write a short brief of 2,000 characters or fewer.";
   if (/ai_limit_reached/.test(text)) return "This request has been analysed as many times as allowed.";
   if (/ai_running/.test(text)) return "An analysis is already running. Refresh in a moment.";
   if (/category_changed|suggestion_changed/.test(text)) return "The kind of help or the suggestion changed a moment ago. The page has been refreshed.";

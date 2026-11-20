@@ -2,7 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ActionForm, ChoiceGroup, SubmitButton, TextAreaField } from "@/components/action-form";
+import { buttonClass } from "@/components/ui";
+import { withPhone } from "@/lib/volunteers";
+import { ActionForm, CheckboxField, ChoiceGroup, SelectField, SubmitButton, TextAreaField } from "@/components/action-form";
 import type { FormState } from "@/lib/form-state";
 import { ACTION_LABEL, actionLabel, holdsStock, needsNote, type RequestStatus } from "@/lib/requests";
 import { COVERAGE_LABEL, MISMATCH_LABEL, type Coverage, type MismatchReason } from "@/lib/resources";
@@ -209,5 +211,85 @@ export function UseCategoryForm({ action, label }: { action: Action; label: stri
     <ActionForm action={action} confirm={`Change the kind of help to ${label}?`}>
       <SubmitButton variant="secondary" pendingLabel="Saving…">Use suggested category</SubmitButton>
     </ActionForm>
+  );
+}
+
+export function AssignVolunteerForm({
+  action,
+  volunteers,
+  baseBrief,
+  requesterPhone,
+}: {
+  action: Action;
+  volunteers: Array<{ id: string; name: string }>;
+  baseBrief: string;
+  requesterPhone: string | null;
+}) {
+  const [includePhone, setIncludePhone] = useState(false);
+  const [brief, setBrief] = useState(baseBrief);
+  const toggle = (on: boolean) => {
+    setIncludePhone(on);
+    setBrief((b) => (on ? withPhone(b, requesterPhone) : b.replace(`\nContact: ${requesterPhone}`, "")));
+  };
+  return (
+    <ActionForm action={action} className="space-y-4">
+      <SelectField
+        name="volunteerId"
+        label="Volunteer"
+        defaultValue=""
+        options={[{ value: "", label: "Choose…" }, ...volunteers.map((v) => ({ value: v.id, label: v.name }))]}
+      />
+      <div>
+        <label htmlFor="task-brief" className="block font-semibold text-charcoal">Task brief</label>
+        <p className="mt-0.5 text-sm text-muted">What the volunteer receives. It leaves out the person&apos;s name and story.</p>
+        <textarea
+          id="task-brief"
+          name="brief"
+          rows={6}
+          maxLength={2000}
+          value={brief}
+          onChange={(e) => setBrief(e.currentTarget.value)}
+          className="mt-2 w-full rounded-lg border border-line bg-white px-3 py-2 text-base text-charcoal"
+        />
+      </div>
+      {requesterPhone ? (
+        <CheckboxField
+          name="includePhone"
+          defaultChecked={includePhone}
+          onChange={toggle}
+          label="Include the person's phone number in the brief"
+        />
+      ) : null}
+      <SubmitButton pendingLabel="Saving…">Give task</SubmitButton>
+    </ActionForm>
+  );
+}
+
+export function TaskStatusForm({ action, label, confirm }: { action: Action; label: string; confirm?: string }) {
+  return (
+    <ActionForm action={action} confirm={confirm}>
+      <SubmitButton variant="secondary" pendingLabel="Saving…">{label}</SubmitButton>
+    </ActionForm>
+  );
+}
+
+export function CopyBriefButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      className={buttonClass("secondary")}
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(text);
+          setCopied(true);
+          window.setTimeout(() => setCopied(false), 2000);
+        } catch {
+          setCopied(false);
+        }
+      }}
+    >
+      {copied ? "Copied" : "Copy brief"}
+    </button>
   );
 }

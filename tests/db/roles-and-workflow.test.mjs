@@ -167,13 +167,17 @@ describe('requests', () => {
 
 describe('notifications', () => {
   test('only the recipient sees a notification, even inside the same church', async () => {
-    const mine = await db.run(s.u.graceOwner, 'select id from public.notifications');
-    assert.equal(mine.rowCount, 1);
-    const colleague = await db.run(s.u.graceAdmin, 'select id from public.notifications');
-    assert.equal(colleague.rowCount, 0);
+    // Since Milestone 7 the fixture's requests also create notifications, so
+    // check ownership rather than counts.
+    const mine = await db.run(s.u.graceOwner, 'select id, recipient_user_id from public.notifications');
+    assert.ok(mine.rows.some((r) => r.id === s.rows.grace.notifications));
+    assert.ok(mine.rows.every((r) => r.recipient_user_id === s.u.graceOwner));
+    const colleague = await db.run(s.u.graceAdmin, 'select id, recipient_user_id from public.notifications');
+    assert.ok(!colleague.rows.some((r) => r.id === s.rows.grace.notifications));
+    assert.ok(colleague.rows.every((r) => r.recipient_user_id === s.u.graceAdmin));
   });
   test('the recipient can mark it read but cannot change its content', async () => {
-    const read = await db.run(s.u.graceOwner, 'update public.notifications set read_at = now()');
+    const read = await db.run(s.u.graceOwner, 'update public.notifications set read_at = now() where id = $1', [s.rows.grace.notifications]);
     assert.equal(read.rowCount, 1);
     await db.rejects(s.u.graceOwner, `update public.notifications set title = 'edited'`, [], DENIED);
     await db.rejects(s.u.graceOwner, 'delete from public.notifications', [], DENIED);

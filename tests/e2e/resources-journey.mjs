@@ -66,9 +66,11 @@ async function staffAccount(s, email, church, slug) {
 }
 async function makeRequest(churchId, { status = 'awaiting_match', category = 'food', text = 'We need help with food this week.', when, channel = 'public', phone, area = null, quantity = 2 } = {}) {
   const { rows } = await mock.pool.query(
+    // Inserted directly, so never analysed: marked 'skipped' so the AI panel
+    // does not wait (and refresh the page) for an analysis that will not come.
     `insert into public.requests (church_id, channel, category_key, original_text, consent_given_at, status, created_at,
-                                  contact_method, contact_value, requester_name, quantity_needed, area)
-     values ($1, $2, $3, $4, now(), $5, coalesce($6, now()), $7, $8, 'Sample Person', $9, $10) returning id, reference`,
+                                  contact_method, contact_value, requester_name, quantity_needed, area, ai_status)
+     values ($1, $2, $3, $4, now(), $5, coalesce($6, now()), $7, $8, 'Sample Person', $9, $10, 'skipped') returning id, reference`,
     [churchId, channel, category, text, status, when ?? null, phone ? 'phone_call' : 'none', phone ?? null, quantity, area]);
   await mock.pool.query(
     `insert into public.request_events (church_id, request_id, event_type, to_status) values ($1, $2, 'submitted', 'submitted')`,
