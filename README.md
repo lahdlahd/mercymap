@@ -22,7 +22,7 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
 | 5 | Resources, matching, transactional allocation | Complete; migration applied live, live test steps skipped (see verification notes) |
 | 6 | AI analysis, summaries, recommendations, safeguarding flags | Complete; migration applied live, partly tested live (no Anthropic key yet; see verification notes) |
 | 7 | Notifications and volunteer coordination | Complete; all live tests passed 20 Nov 2026 |
-| 8 | Dashboard, Reports & Impact, exports | Not started |
+| 8 | Dashboard, Reports & Impact, exports | Built and tested locally; live tests pending |
 | 9 | Landing page and polish | Not started |
 | 10 | Optional voice recording and transcription | Not started |
 | 11 | Demo data, regression testing, demo preparation | Not started |
@@ -96,6 +96,21 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
   six browser journeys (60, 54, 54, 77, 44 and 50 checks). Live, 20 Nov 2026:
   every step passed against the real Supabase project; see
   [`docs/milestone-7-live-test-results.md`](docs/milestone-7-live-test-results.md).
+
+- **Milestone 8.** Overview tiles (needs attention, new, open, awaiting a
+  resource, approved, in delivery, helped and units given this month,
+  resources running low), each linking to the list it counts. Reports & Impact
+  for the last 7, 30 (default), 90 or 365 Lagos days: five figures, four charts
+  (requests over time, by kind of help, outcomes, stock given out) with a table
+  view, and the share of approvals that used the AI-suggested resource. CSV
+  exports (requests, stock given out, volunteer tasks) for owners and admins
+  only, with no names, phone numbers or descriptions, protected against
+  spreadsheet formula injection, posted from this site only, and every download
+  in the audit log. All figures are computed from the church's own records by
+  membership-checked database functions. Locally: 268 database tests (exact
+  figures for every period and boundary; four rules mutation-checked), 169 unit
+  tests and seven browser journeys (60, 54, 54, 77, 44, 50 and 47 checks).
+  **Live tests pending:** [`docs/milestone-8-live-test.md`](docs/milestone-8-live-test.md).
 
 ## Secrets
 
