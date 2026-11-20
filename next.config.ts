@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const securityHeaders = [
@@ -17,6 +18,10 @@ const securityHeaders = [
 // rendering model keeps that simple and avoids any cross-user caching risk.
 const nextConfig: NextConfig = {
   turbopack: {
+    // Pin the root to this folder. A stray lockfile higher up (for example in
+    // the user's home folder) must never make Turbopack watch that whole tree:
+    // constant changes there caused an endless reload loop in development.
+    root: path.join(__dirname),
     rules: {
       "*.css": {
         loaders: ["@tailwindcss/turbopack"],
