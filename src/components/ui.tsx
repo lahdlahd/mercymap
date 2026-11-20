@@ -79,11 +79,12 @@ export function StatusBadge({ status }: { status: "pending" | "verified" | "susp
   return <Badge tone="pending">… Awaiting verification</Badge>;
 }
 
-// Temporary wordmark. The Mercy Mark logo is produced in the landing-page milestone.
-export function Wordmark({ className }: { className?: string }) {
+// The MERCYMAP wordmark. "MAP" uses a gold that keeps 4.5:1 contrast: darker
+// on light backgrounds, lighter on the forest-green sidebar and banners.
+export function Wordmark({ className, onDark = false }: { className?: string; onDark?: boolean }) {
   return (
     <span className={cx("font-display text-lg font-extrabold tracking-wide", className)}>
-      MERCY<span className="text-gold">MAP</span>
+      MERCY<span className={onDark ? "text-gold-light" : "text-gold-ink"}>MAP</span>
     </span>
   );
 }

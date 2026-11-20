@@ -27,11 +27,13 @@ function Tile({ href, label, value, note, alert, warn }: { href: string; label: 
   const tone = alert ? "border-danger/40 bg-danger-soft" : warn ? "border-pending/40 bg-pending-soft" : "border-line bg-white";
   const ink = alert ? "text-danger-ink" : warn ? "text-pending-ink" : "text-charcoal";
   return (
-    <Link href={href} className={`block rounded-xl border p-4 hover:shadow-sm ${tone}`} data-tile={label}>
-      <dt className={`text-sm ${alert || warn ? ink : "text-muted"}`}>{label}</dt>
-      <dd className={`mt-1 font-display text-3xl font-bold ${ink}`}>{value}</dd>
-      {note ? <dd className="text-xs text-muted">{note}</dd> : null}
-    </Link>
+    <li>
+      <Link href={href} className={`block h-full rounded-xl border p-4 hover:shadow-sm ${tone}`} data-tile={label}>
+        <span className={`block text-sm ${alert || warn ? ink : "text-muted"}`}>{label}</span>
+        <span className={`mt-1 block font-display text-3xl font-bold ${ink}`} data-value="">{value}</span>
+        {note ? <span className="block text-xs text-muted">{note}</span> : null}
+      </Link>
+    </li>
   );
 }
 
@@ -82,7 +84,7 @@ export default async function OverviewPage() {
           <Link href="/app/reports" className="text-sm font-semibold text-forest underline">Reports & Impact</Link>
         </div>
         {d ? (
-          <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <Tile href="/app/requests?status=attention" label="Needs attention" value={d.attention} alert={d.attention > 0} />
             <Tile href="/app/requests?status=submitted" label="New" value={d.new} />
             <Tile href="/app/requests" label="Open" value={d.open} />
@@ -92,7 +94,7 @@ export default async function OverviewPage() {
             <Tile href="/app/reports" label="Helped this month" value={d.fulfilled_this_month} note={`Since ${formatDate(d.month_start)}`} />
             <Tile href="/app/reports" label="Units given this month" value={d.units_given_this_month} note={`Since ${formatDate(d.month_start)}`} />
             <Tile href="/app/resources" label="Resources running low" value={d.low_stock} warn={d.low_stock > 0} />
-          </dl>
+          </ul>
         ) : (
           <p className="text-sm text-muted">The figures could not be loaded. Refresh the page to try again.</p>
         )}

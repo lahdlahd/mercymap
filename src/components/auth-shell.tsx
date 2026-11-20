@@ -4,7 +4,7 @@ import { Card, Wordmark } from "@/components/ui";
 
 export function AuthShell({ title, intro, children, footer }: { title: string; intro?: string; children: ReactNode; footer?: ReactNode }) {
   return (
-    <main className="flex flex-1 flex-col items-center bg-ivory px-4 py-10 sm:py-16">
+    <main id="main" tabIndex={-1} className="flex flex-1 flex-col items-center bg-ivory px-4 py-10 sm:py-16">
       <Link href="/" className="mb-8 text-forest" aria-label="MERCYMAP home">
         <Wordmark className="text-2xl" />
       </Link>

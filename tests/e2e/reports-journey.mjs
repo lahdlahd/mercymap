@@ -134,7 +134,7 @@ async function seed(church) {
   } finally { c.release(); }
 }
 const figure = (s, label) => s.page.$eval(`[data-figure="${label}"] dd`, (el) => el.textContent.trim());
-const tile = (s, label) => s.page.$eval(`[data-tile="${label}"] dd`, (el) => el.textContent.trim());
+const tile = (s, label) => s.page.$eval(`[data-tile="${label}"] [data-value]`, (el) => el.textContent.trim());
 async function postExport(s, kind, days) {
   return s.page.evaluate(async (k, d) => {
     const body = new FormData(); body.set('kind', k); body.set('days', String(d));
