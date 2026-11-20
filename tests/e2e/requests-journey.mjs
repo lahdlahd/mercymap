@@ -213,7 +213,7 @@ try {
   await owner.go('/app/requests?status=attention');
   check('"Needs attention" tab lists it', (await owner.text()).includes(a.reference));
   await owner.go('/app');
-  check('overview shows 1 needing attention', /Need attention\n1/.test(await owner.text()));
+  check('overview shows 1 needing attention', /Needs attention\n1\b/.test(await owner.text()));
 
   await owner.go(`/app/requests/${a.id}`);
   await owner.press('Mark as reviewed');
