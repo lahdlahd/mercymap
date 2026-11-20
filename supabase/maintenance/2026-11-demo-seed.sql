@@ -16,8 +16,8 @@
 -- so the dashboard and reports show about seven months of activity.
 --
 -- AI analysis is not faked: every request starts with no analysis. After
--- Anthropic credit is added, run `npm run demo:analyse` to have Claude
--- analyse them for real.
+-- Anthropic credit is added, sign in as the demo owner and use
+-- Requests -> "Analyse waiting requests" to have Claude analyse them for real.
 --
 -- Runs in one transaction. If anything fails, nothing is kept. Running it a
 -- second time stops with "already seeded" and changes nothing.
