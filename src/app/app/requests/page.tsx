@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ActionForm, SubmitButton } from "@/components/action-form";
 import { Alert, Badge, buttonClass, Card } from "@/components/ui";
-import { requireMembership } from "@/lib/auth";
+import { canManageStaff, requireMembership } from "@/lib/auth";
 import { formatDateTime } from "@/lib/format";
 import {
   CHANNEL_LABEL,
@@ -12,9 +13,13 @@ import {
   type ListTab,
   type RequestStatus,
 } from "@/lib/requests";
+import { aiConfig } from "@/lib/server-env";
 import { createClient } from "@/lib/supabase/server";
+import { analyseWaitingAction } from "./actions";
 
 export const metadata: Metadata = { title: "Requests" };
+// "Analyse waiting requests" runs up to 30 AI analyses in one action.
+export const maxDuration = 300;
 
 const PAGE_SIZE = 25;
 
@@ -30,7 +35,15 @@ type Row = {
   created_at: string;
 };
 type Counts = { total: number; open: number; closed: number; attention_open: number; by_status: Record<string, number> };
-type Params = { status?: string; category?: string; channel?: string; q?: string; page?: string };
+type Params = { status?: string; category?: string; channel?: string; q?: string; page?: string; analysed?: string; failed?: string };
+
+// Result of "Analyse waiting requests", carried in the address after the run.
+function aiRunResult(params: Params): { done: number; failed: number } | null {
+  const read = (v?: string) => (v && /^\d{1,2}$/.test(v) ? Number(v) : null);
+  const done = read(params.analysed);
+  const failed = read(params.failed);
+  return done === null || failed === null ? null : { done, failed };
+}
 
 function tabCount(tab: ListTab, counts: Counts | null): number | null {
   if (!counts) return null;
@@ -51,7 +64,8 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
 
   const supabase = await createClient();
   const churchId = membership.church.id;
-  const [listResult, countsResult, categoriesResult] = await Promise.all([
+  const showAiBacklog = canManageStaff(membership.role) && aiConfig() !== null;
+  const [listResult, countsResult, categoriesResult, waitingResult] = await Promise.all([
     supabase.rpc("list_requests", {
       p_church_id: churchId,
       p_status: tab === "attention" ? "all" : tab,
@@ -64,7 +78,10 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
     }),
     supabase.rpc("request_status_counts", { p_church_id: churchId }),
     supabase.from("categories").select("key, label").eq("is_active", true).order("sort_order"),
+    showAiBacklog ? supabase.rpc("ai_waiting_count", { p_church_id: churchId }) : Promise.resolve({ data: 0 }),
   ]);
+  const aiWaiting = typeof waitingResult.data === "number" ? waitingResult.data : 0;
+  const aiResult = aiRunResult(params);
   const list = listResult.data as { total: number; rows: Row[] } | null;
   const counts = countsResult.data as Counts | null;
   const categories = (categoriesResult.data ?? []) as Array<{ key: string; label: string }>;
@@ -99,6 +116,26 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
             Show them
           </Link>
         </Alert>
+      ) : null}
+
+      {aiResult ? (
+        <Alert tone={aiResult.failed > 0 ? "error" : "success"} title={`AI suggestions added to ${aiResult.done} ${aiResult.done === 1 ? "request" : "requests"}.`}>
+          {aiResult.failed > 0
+            ? `${aiResult.failed} could not be analysed; the AI may be unavailable. Try again later.`
+            : "Open a request to see its suggestions. People still make every decision."}
+        </Alert>
+      ) : null}
+
+      {aiWaiting > 0 ? (
+        <Card className="flex flex-wrap items-center justify-between gap-3" data-ai-waiting="">
+          <p className="text-sm text-charcoal">
+            <span className="font-semibold">{aiWaiting} {aiWaiting === 1 ? "request is" : "requests are"} waiting for AI suggestions.</span>{" "}
+            <span className="text-muted">Names and contact details are removed before anything is sent. Up to 30 at a time.</span>
+          </p>
+          <ActionForm action={analyseWaitingAction}>
+            <SubmitButton variant="secondary" pendingLabel="Analysing… this can take a minute">Analyse waiting requests</SubmitButton>
+          </ActionForm>
+        </Card>
       ) : null}
 
       <nav aria-label="Request status" className="-mx-1 flex gap-1 overflow-x-auto border-b border-line px-1 lg:flex-wrap lg:overflow-visible">
