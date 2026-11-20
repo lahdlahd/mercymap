@@ -22,7 +22,7 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
 | 5 | Resources, matching, transactional allocation | Complete; migration applied live, live test steps skipped (see verification notes) |
 | 6 | AI analysis, summaries, recommendations, safeguarding flags | Complete; migration applied live, partly tested live (no Anthropic key yet; see verification notes) |
 | 7 | Notifications and volunteer coordination | Complete; all live tests passed 20 Nov 2026 |
-| 8 | Dashboard, Reports & Impact, exports | Built and tested locally; live tests pending |
+| 8 | Dashboard, Reports & Impact, exports | Complete; live tests passed 20 Nov 2026 |
 | 9 | Landing page and polish | Not started |
 | 10 | Optional voice recording and transcription | Not started |
 | 11 | Demo data, regression testing, demo preparation | Not started |
@@ -110,7 +110,9 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
   membership-checked database functions. Locally: 268 database tests (exact
   figures for every period and boundary; four rules mutation-checked), 169 unit
   tests and seven browser journeys (60, 54, 54, 77, 44, 50 and 47 checks).
-  **Live tests pending:** [`docs/milestone-8-live-test.md`](docs/milestone-8-live-test.md).
+  Live, 20 Nov 2026: passed against the real Supabase project (coordinator view
+  and SQL comparison skipped); see
+  [`docs/milestone-8-live-test-results.md`](docs/milestone-8-live-test-results.md).
 
 ## Secrets
 
