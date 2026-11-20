@@ -245,10 +245,13 @@ describe('members can work inside their own church', () => {
       `insert into public.resources (church_id, name, category_key, unit, total_quantity)
        values ($1, 'School bags', 'education', 'bag', 12) returning id`, [s.grace]);
     await db.run(s.u.graceCoord, 'update public.resources set total_quantity = 15 where id = $1', [res.rows[0].id]);
+    // Since Milestone 7, volunteers change only through the checked function.
     const vol = await db.run(s.u.graceCoord,
-      `insert into public.volunteers (church_id, full_name) values ($1, 'Second Volunteer') returning id`, [s.grace]);
-    const upd = await db.run(s.u.graceCoord,
-      `update public.volunteers set status = 'inactive' where id = $1`, [vol.rows[0].id]);
-    assert.equal(upd.rowCount, 1);
+      `select public.save_volunteer(null, $1, 'Second Volunteer', null, '{}', null, false) as id`, [s.grace]);
+    await db.run(s.u.graceCoord,
+      `select public.save_volunteer($1, $2, 'Second Volunteer', null, '{}', null, false, 'inactive')`, [vol.rows[0].id, s.grace]);
+    const { rows } = await db.run(s.u.graceCoord, 'select status from public.volunteers where id = $1', [vol.rows[0].id]);
+    assert.equal(rows[0].status, 'inactive');
+    await db.rejects(s.u.graceCoord, `update public.volunteers set status = 'active' where id = $1`, [vol.rows[0].id], DENIED);
   });
 });

@@ -21,7 +21,7 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
 | 4 | Requests list, details, lifecycle, event history | Complete; live tests passed (see verification notes) |
 | 5 | Resources, matching, transactional allocation | Complete; migration applied live, live test steps skipped (see verification notes) |
 | 6 | AI analysis, summaries, recommendations, safeguarding flags | Complete; migration applied live, partly tested live (no Anthropic key yet; see verification notes) |
-| 7 | Notifications and volunteer coordination | Not started |
+| 7 | Notifications and volunteer coordination | Complete; all live tests passed 20 Nov 2026 |
 | 8 | Dashboard, Reports & Impact, exports | Not started |
 | 9 | Landing page and polish | Not started |
 | 10 | Optional voice recording and transcription | Not started |
@@ -82,6 +82,20 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
   passed; **the real Claude API has not been tested yet (no key with credit) and
   the other steps were skipped by decision of the project owner**; see
   [`docs/milestone-6-live-test-results.md`](docs/milestone-6-live-test-results.md).
+
+- **Milestone 7.** In-app notifications created by the database (new request,
+  needs attention, stock running low, volunteer task completed) with a bell,
+  unread count and mark read; they carry only a reference and the kind of help.
+  Volunteers (no logins; phone kept only with their consent) and volunteer tasks
+  on approved requests with a minimal brief (no name or story; the person's
+  phone only if staff tick it), Copy brief and Send on WhatsApp. Declining,
+  cancelling or closing a request cancels its open tasks. Volunteer and task
+  changes go through checked functions and the audit log; direct staff writes
+  were withdrawn. Also fixes the order of history entries written in one step.
+  Locally: 251 database tests (four rules mutation-checked), 161 unit tests and
+  six browser journeys (60, 54, 54, 77, 44 and 50 checks). Live, 20 Nov 2026:
+  every step passed against the real Supabase project; see
+  [`docs/milestone-7-live-test-results.md`](docs/milestone-7-live-test-results.md).
 
 ## Secrets
 

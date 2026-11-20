@@ -30,7 +30,7 @@ async function run(requestId: string, fn: (supabase: Awaited<ReturnType<typeof c
       revalidatePath(path);
       redirect(`${path}?changed=1`);
     }
-    if (/resource_|insufficient_available|category_changed|suggestion_changed|no_suggestion/.test(error.message)) revalidatePath(path);
+    if (/resource_|insufficient_available|category_changed|suggestion_changed|no_suggestion|volunteer_|already_assigned|invalid_transition/.test(error.message)) revalidatePath(path);
     return { message: requestDbError(error.message) };
   }
   revalidatePath(path);
@@ -135,4 +135,28 @@ export async function applySuggestedCategoryAction(requestId: string, fromCatego
   return run(requestId, (s) => s.rpc("apply_ai_category", {
     p_request_id: requestId, p_from_category: fromCategory, p_analysis_id: analysisId,
   }), "Kind of help updated.");
+}
+
+// Gives an approved request to a volunteer. The brief is what staff saw and
+// edited; the database checks the request is still approved and the
+// volunteer belongs to this church and is available.
+export async function assignVolunteerAction(requestId: string, from: string, _state: FormState, formData: FormData): Promise<FormState> {
+  const volunteerId = text(formData, "volunteerId");
+  const brief = String(formData.get("brief") ?? "").trim();
+  if (!uuidSchema.safeParse(volunteerId).success) {
+    return { fieldErrors: { volunteerId: "Choose a volunteer." }, values: { brief } };
+  }
+  if (brief.length < 1 || brief.length > 2000) {
+    return { fieldErrors: { brief: "Write a short brief of 2,000 characters or fewer." }, values: { brief } };
+  }
+  return run(requestId, (s) => s.rpc("create_assignment", {
+    p_request_id: requestId, p_from_status: from, p_volunteer_id: volunteerId, p_task_brief: brief,
+  }), "Task given. Copy the brief or send it on WhatsApp.");
+}
+
+export async function updateTaskAction(requestId: string, assignmentId: string, from: string, to: string): Promise<FormState> {
+  if (!uuidSchema.safeParse(assignmentId).success) return { message: "That task could not be found." };
+  return run(requestId, (s) => s.rpc("update_assignment_status", {
+    p_assignment_id: assignmentId, p_from_status: from, p_to_status: to,
+  }), to === "completed" ? "Task completed. Record the delivery when the help has been given." : "Task updated.");
 }

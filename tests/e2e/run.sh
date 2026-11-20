@@ -21,7 +21,7 @@ npx next start -p 3100 >/tmp/mercymap-e2e-next.log 2>&1 &
 NEXT_PID=$!
 trap 'kill $NEXT_PID 2>/dev/null || true' EXIT
 for _ in $(seq 1 40); do curl -sf -o /dev/null http://localhost:3100/ && break; sleep 0.5; done
-journeys=("${@:-tests/e2e/journey.mjs tests/e2e/intake-journey.mjs tests/e2e/requests-journey.mjs tests/e2e/resources-journey.mjs tests/e2e/ai-journey.mjs}")
+journeys=("${@:-tests/e2e/journey.mjs tests/e2e/intake-journey.mjs tests/e2e/requests-journey.mjs tests/e2e/resources-journey.mjs tests/e2e/ai-journey.mjs tests/e2e/volunteers-journey.mjs}")
 for j in ${journeys[@]}; do
   echo "== $j"
   node "$j"
