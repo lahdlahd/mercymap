@@ -157,10 +157,10 @@ try {
 
   console.log('\nDashboard tiles');
   await owner.go('/app');
-  const expected = { 'Needs attention': '1', New: '2', Open: '4', 'Awaiting a resource': '1', Approved: '1', 'In delivery': '0', 'Resources running low': '1' };
+  const expected = { 'Needs attention': '1', New: '2', Open: '4', 'Awaiting match': '1', Approved: '1', 'In delivery': '0', 'Resources running low': '1' };
   for (const [label, value] of Object.entries(expected)) check(`tile "${label}" shows ${value}`, (await tile(owner, label)) === value, await tile(owner, label));
   const links = { 'Needs attention': '/app/requests?status=attention', New: '/app/requests?status=submitted', Open: '/app/requests',
-    'Awaiting a resource': '/app/requests?status=awaiting_match', Approved: '/app/requests?status=approved', 'In delivery': '/app/requests?status=in_progress',
+    'Awaiting match': '/app/requests?status=awaiting_match', Approved: '/app/requests?status=approved', 'In delivery': '/app/requests?status=in_progress',
     'Helped this month': '/app/reports', 'Units given this month': '/app/reports', 'Resources running low': '/app/resources' };
   for (const [label, href] of Object.entries(links)) {
     await owner.go('/app');

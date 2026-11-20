@@ -93,7 +93,7 @@ try {
   check('tiles: 1 needs attention, 4 new, 10 open',
     t['Needs attention'] === '1' && t['New'] === '4' && t['Open'] === '10', JSON.stringify(t));
   check('tiles: 2 awaiting a resource, 1 approved, 1 in delivery, 1 running low',
-    t['Awaiting a resource'] === '2' && t['Approved'] === '1' && t['In delivery'] === '1' && t['Resources running low'] === '1', JSON.stringify(t));
+    t['Awaiting match'] === '2' && t['Approved'] === '1' && t['In delivery'] === '1' && t['Resources running low'] === '1', JSON.stringify(t));
   check('no "awaiting verification" notice for the verified demo church', !(await owner.text()).includes('awaiting verification'));
   await owner.shot('01-overview');
 
@@ -188,6 +188,12 @@ try {
   await phone.shot('12-overview-phone');
   const overflow = await phone.page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
   check('the demo overview fits a phone screen', !overflow);
+
+  const res = await fetch(BASE + '/');
+  check('security headers: HSTS and a content security policy',
+    /max-age=63072000/.test(res.headers.get('strict-transport-security') ?? '')
+    && /frame-ancestors 'none'/.test(res.headers.get('content-security-policy') ?? '')
+    && /form-action 'self'/.test(res.headers.get('content-security-policy') ?? ''));
 
   check('no browser errors', browserErrors.length === 0, browserErrors.join(' | '));
 } catch (err) {

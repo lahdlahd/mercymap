@@ -33,7 +33,7 @@ The last line must start with the commit shown on PR #10. Then `npm run dev`.
 |---|---|---|
 | B1 | Sign in as the Grace owner, open Requests, search `MM-EEDC36` | No request found. Grace's other requests are still there |
 | B2 | Sign in as **mikinaldo9@gmail.com**, open `/platform` | No "uguuu"; **Hope Harvest Chapel** is listed as Verified |
-| B3 | In an InPrivate window, sign in as `owner@hopeharvest.example` | Overview: Needs attention 1, New 4, Open 10, Awaiting a resource 2, Approved 1, In delivery 1, Resources running low 1 |
+| B3 | In an InPrivate window, sign in as `owner@hopeharvest.example` | Overview: Needs attention 1, New 4, Open 10, Awaiting match 2, Approved 1, In delivery 1, Resources running low 1 |
 | B4 | Requests | 10 open requests and a red "1 safeguarding concern needs review" box. (The "waiting for AI suggestions" card appears only once an Anthropic key is set) |
 | B5 | Open any fulfilled request (Closed tab) | A full history from "Request received" to "Fulfilled", with dates over several days and the volunteer task |
 | B6 | Reports & Impact, then Last 365 days | Figures and four charts; 365 days shows 28 received and 14 fulfilled |

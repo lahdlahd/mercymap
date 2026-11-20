@@ -25,7 +25,7 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
 | 8 | Dashboard, Reports & Impact, exports | Complete; live tests passed 20 Nov 2026 |
 | 9 | Landing page and polish | Complete; all live tests passed 20 Nov 2026 |
 | 10 | Voice recording and transcription | Deferred (decision of 20 Nov 2026): stays on the roadmap as an accessibility feature, to be built after the main product and demo are ready |
-| 11 | Demo data, regression testing, demo preparation | Not started |
+| 11 | Demo data, regression testing, deployment, demo preparation | In progress (PR #10) |
 
 ### Verification notes
 
@@ -128,6 +128,14 @@ Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Supabase
   checks with no violations on 18 public and staff pages and phone-layout
   checks on each. Live, 20 Nov 2026: every step passed
   ([`docs/milestone-9-live-test-results.md`](docs/milestone-9-live-test-results.md)).
+- **Milestone 11 (in progress).** Guarded clean-up of earlier test data; a
+  fictional demo church (Hope Harvest Chapel) built through the real workflow
+  functions; "Analyse waiting requests" for owners and admins (audited, at
+  most 30 per run) so requests that arrived while the AI was unavailable get
+  analysed; HSTS and a narrow Content-Security-Policy; the lint-tool
+  advisories fixed (`npm audit`: 0 vulnerabilities). Locally: 299 database
+  tests, 169 unit tests and nine browser journeys. Live steps:
+  [`docs/milestone-11-live-steps-part-1.md`](docs/milestone-11-live-steps-part-1.md).
 
 ## Secrets
 
@@ -194,4 +202,23 @@ journey fakes Supabase Auth, so it does not replace live testing.
 
 With the Supabase CLI linked to your project: `supabase db push`, or paste each
 file into the SQL Editor in filename order.
+
+## Demo data and one-off maintenance
+
+`supabase/maintenance/` holds scripts that are run by hand in the SQL Editor,
+never as migrations:
+
+- `2026-11-demo-seed.sql` creates **Hope Harvest Chapel**, a fictional demo
+  church. Create its three accounts first (Authentication → Users → Add user,
+  Auto Confirm): `owner@`, `admin@` and `coordinator@hopeharvest.example`.
+  Every step runs through the app's own database functions, so the data obeys
+  the same rules as real use. No AI output is included: sign in as the demo
+  owner and use **Requests → Analyse waiting requests** once an Anthropic key
+  is set.
+- `2026-11-cleanup-1-preview.sql` / `-2-remove.sql` removed the test data left
+  from live testing before the demo (preview first; the removal rolls back if
+  any other church would change).
+
+Both are covered by database tests (`tests/db/demo-seed.test.mjs`,
+`tests/db/cleanup.test.mjs`).
 All demo and test data in this repository is fictional.
