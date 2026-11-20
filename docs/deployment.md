@@ -27,6 +27,10 @@ Secrets go only into Vercel's Environment Variables screen and your own
    password = the SMTP key, sender email = the verified address, sender name
    `MERCYMAP`. Save.
 4. Supabase → **Authentication → Rate Limits**: emails per hour about 30 (raise if needed).
+5. Brevo → **Security → Authorized IPs**: deactivate blocking for SMTP keys
+   (Supabase sends from changing addresses; otherwise Brevo holds each new one).
+6. The SMTP username is the **Login** on Brevo's SMTP page (`…@smtp-brevo.com`),
+   not your email address.
 
 ## 3. Vercel project
 
@@ -52,7 +56,8 @@ Secrets go only into Vercel's Environment Variables screen and your own
    variables are fixed at build time).
 4. Vercel → Project → **Settings → Functions → Function Region**: choose the
    region closest to your Supabase project, then redeploy. This keeps every
-   page fast.
+   page fast. MERCYMAP's Supabase project is in Stockholm, so choose
+   **Stockholm, Sweden (arn1)**.
 
 ## 4. Supabase Auth URLs
 

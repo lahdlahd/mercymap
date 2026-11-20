@@ -33,3 +33,22 @@ code `milestone-11-final` (`4e1a1ec`, then `638d64a`).
 
 Pending: part 2 (real Claude analysis), Brevo email, deployment and the full
 live regression.
+
+## Email: Brevo SMTP (20 Nov 2026)
+
+Pass. Sign-up at `localhost:3000/sign-up` sent the confirmation email through
+Brevo and the link worked. Setup issues met and fixed on the way:
+
+- The Supabase SMTP username was first entered as placeholder text; it must be
+  the **Login** shown on Brevo's SMTP page (`…@smtp-brevo.com`).
+- Brevo blocked Supabase's sending IP (Stockholm, AWS) as a "new IP". The IP
+  was authorised and IP blocking for SMTP keys was switched off, because
+  Supabase may send from other addresses.
+- The sender is a Gmail address (no own domain yet), so Brevo warns about
+  DMARC; emails may land in Spam until a custom domain is added.
+- The app's message for a failed sign-up said "check your internet
+  connection" although the server had answered with an error; reworded
+  (`b16fff4`).
+
+Test account created: antyamoke78@gmail.com (no church). Remove before the
+demo if not needed.
