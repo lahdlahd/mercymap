@@ -50,14 +50,16 @@ export type AiConfig = {
 // runner needs) the app works as before and the request page says AI
 // suggestions are not set up.
 export function aiConfig(): AiConfig | null {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY;
+  // Trimmed: a key pasted into a hosting dashboard often carries a trailing
+  // space or line break, which makes the request header invalid.
+  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
+  const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY?.trim();
   if (!apiKey || !supabaseSecretKey) return null;
   return {
     apiKey,
     supabaseSecretKey,
-    model: process.env.AI_MODEL || "claude-haiku-5-5",
-    baseUrl: (process.env.ANTHROPIC_BASE_URL || "https://api.anthropic.com").replace(/\/+$/, ""),
+    model: process.env.AI_MODEL?.trim() || "claude-haiku-5-5",
+    baseUrl: (process.env.ANTHROPIC_BASE_URL?.trim() || "https://api.anthropic.com").replace(/\/+$/, ""),
     dailyLimit: parseDailyLimit(process.env.AI_DAILY_LIMIT),
   };
 }
