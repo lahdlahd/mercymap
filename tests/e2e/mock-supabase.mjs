@@ -165,7 +165,7 @@ export async function startMockSupabase(port) {
       }
       if (path === '/anthropic/v1/messages' && req.method === 'POST') {
         aiCalls.push({ headers: { apiKey: req.headers['x-api-key'], version: req.headers['anthropic-version'] }, body });
-        if (aiControl.mode === 'down' || req.headers['x-api-key'] !== 'e2e-anthropic-key') {
+        if (aiControl.mode === 'down' || req.headers['x-api-key'] !== 'sk-ant-e2e-anthropic-key') {
           return send(aiControl.mode === 'down' ? 529 : 401, { type: 'error', error: { type: 'overloaded_error', message: 'fake' } });
         }
         const userText = body.messages?.[0]?.content ?? '';

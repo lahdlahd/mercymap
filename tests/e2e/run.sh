@@ -12,7 +12,7 @@ export SUPABASE_SECRET_KEY=sb_secret_local_e2e
 export INTAKE_HASH_SECRET=e2e-intake-hash-secret-0123456789
 export TURNSTILE_SECRET_KEY=e2e-turnstile-secret
 export TURNSTILE_VERIFY_URL=http://127.0.0.1:54400/turnstile/siteverify
-export ANTHROPIC_API_KEY=e2e-anthropic-key
+export ANTHROPIC_API_KEY=sk-ant-e2e-anthropic-key
 export ANTHROPIC_BASE_URL=http://127.0.0.1:54400/anthropic
 # Low enough for the demo journey to reach it; each journey has a fresh database.
 export AI_DAILY_LIMIT=40

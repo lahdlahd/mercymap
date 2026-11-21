@@ -31,6 +31,11 @@ export async function callClaude(
   config: { apiKey: string; model: string; baseUrl: string },
   fetchImpl: typeof fetch = fetch,
 ): Promise<ClaudeResult> {
+  const problem = settingsProblem(config);
+  if (problem) {
+    console.error(`AI settings problem: ${problem}`);
+    return { ok: false, error: "bad_settings" };
+  }
   const body = requestBody(claimed, config.model);
   let response: Response;
   try {
@@ -68,6 +73,25 @@ export async function callClaude(
   }
   const use = data.content?.find((c) => c.type === "tool_use" && c.name === TOOL_NAME);
   return use ? { ok: true, input: use.input } : { ok: false, error: "no_tool_use" };
+}
+
+// Checks the settings a request is built from, so a mistyped value is named
+// in the logs instead of failing inside fetch. Never quotes the key itself:
+// only the position and code of an unexpected character.
+export function settingsProblem(config: { apiKey: string; baseUrl: string }): string | null {
+  const bad = [...config.apiKey].findIndex((ch) => !/[\x21-\x7e]/.test(ch));
+  if (bad >= 0) {
+    const code = config.apiKey.codePointAt(bad)!.toString(16).toUpperCase().padStart(4, "0");
+    return `ANTHROPIC_API_KEY has an unexpected character at position ${bad + 1} of ${config.apiKey.length} (U+${code}). Paste the key again.`;
+  }
+  if (!config.apiKey.startsWith("sk-ant-")) return "ANTHROPIC_API_KEY does not start with sk-ant-. Paste only the key itself.";
+  try {
+    const url = new URL(config.baseUrl);
+    if (url.protocol !== "https:" && url.protocol !== "http:") throw new Error("protocol");
+  } catch {
+    return "ANTHROPIC_BASE_URL is not a valid web address. Remove it to use the default.";
+  }
+  return null;
 }
 
 // Worth one more try: rate limits, overload, server errors, timeouts.
