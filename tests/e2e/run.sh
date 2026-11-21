@@ -14,6 +14,8 @@ export TURNSTILE_SECRET_KEY=e2e-turnstile-secret
 export TURNSTILE_VERIFY_URL=http://127.0.0.1:54400/turnstile/siteverify
 export ANTHROPIC_API_KEY=e2e-anthropic-key
 export ANTHROPIC_BASE_URL=http://127.0.0.1:54400/anthropic
+# Low enough for the demo journey to reach it; each journey has a fresh database.
+export AI_DAILY_LIMIT=40
 export AI_MODEL=claude-haiku-5-5
 export NEXT_TELEMETRY_DISABLED=1
 npx next build >/dev/null

@@ -4,10 +4,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { PROMPT_VERSION, parseOutput, type ClaimedRequest } from "./analysis";
 import { callClaude, isRetryable } from "./claude";
 
-export type RunResult = "done" | "failed" | "skipped" | "not_configured";
+export type RunResult = "done" | "failed" | "skipped" | "not_configured" | "limited";
 
 // Analyses one request. Safe to call more than once: the database hands a
-// request to one run at a time and limits attempts. Never throws.
+// request to one run at a time and limits attempts. Respects the daily cap
+// (AI_DAILY_LIMIT). Never throws.
 export async function runAnalysis(reference: string, options: { force?: boolean } = {}): Promise<RunResult> {
   const config = aiConfig();
   if (!config) return "not_configured";
@@ -15,6 +16,14 @@ export async function runAnalysis(reference: string, options: { force?: boolean 
 
   let claimed: ClaimedRequest | null = null;
   try {
+    // Daily cap: over the limit the request stays waiting and is not sent.
+    const runs = await admin.rpc("ai_runs_last_day");
+    if (runs.error) {
+      console.error("ai_runs_last_day failed:", runs.error.code ?? "unknown");
+      return "failed";
+    }
+    if (typeof runs.data !== "number" || runs.data >= config.dailyLimit) return "limited";
+
     const { data, error } = await admin.rpc("ai_claim", { p_reference: reference, p_force: Boolean(options.force) });
     if (error) {
       console.error("ai_claim failed:", error.code ?? "unknown");

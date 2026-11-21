@@ -137,6 +137,24 @@ try {
   await owner.press('Analyse waiting requests', 1500);
   check('it works again once the AI is back', (await owner.text()).includes('AI suggestions added to 1 request.'));
 
+  console.log('Daily AI limit (40 in this test)');
+  const used = (await mock.pool.query('select count(*)::int as n from public.ai_analyses')).rows[0].n;
+  const fill = 40 - used;
+  await mock.pool.query(
+    `insert into public.ai_analyses (church_id, request_id, status, provider, model, prompt_version, error)
+     select r.church_id, r.id, 'failed', 'test', 'm', 'v1', 'filler'
+       from public.requests r cross join generate_series(1, $2::int) g
+      where r.church_id = $1 limit $2`, [church.id, fill]);
+  await mock.pool.query(`update public.requests set ai_status = 'failed', ai_attempts = 1
+                          where id = (select id from public.requests where church_id = $1 order by created_at desc limit 1)`, [church.id]);
+  const callsBefore = mock.aiCalls.length;
+  await owner.go('/app/requests');
+  await owner.press('Analyse waiting requests', 1500);
+  check('at the limit, the AI is not called', mock.aiCalls.length === callsBefore, `${mock.aiCalls.length - callsBefore} calls`);
+  check('and the page says the daily limit was reached',
+    (await owner.text()).includes("Today's AI limit has been reached, so 1 request is still waiting."));
+  check('the request is still waiting for a later run', Boolean(await owner.page.$('[data-ai-waiting]')));
+
   console.log('Pages for review');
   const ref = async (text) => (await mock.pool.query(
     `select id from public.requests where church_id = $1 and original_text like $2`, [church.id, `${text}%`])).rows[0].id;

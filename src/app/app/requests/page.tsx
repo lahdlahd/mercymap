@@ -35,14 +35,15 @@ type Row = {
   created_at: string;
 };
 type Counts = { total: number; open: number; closed: number; attention_open: number; by_status: Record<string, number> };
-type Params = { status?: string; category?: string; channel?: string; q?: string; page?: string; analysed?: string; failed?: string };
+type Params = { status?: string; category?: string; channel?: string; q?: string; page?: string; analysed?: string; failed?: string; limited?: string };
 
 // Result of "Analyse waiting requests", carried in the address after the run.
-function aiRunResult(params: Params): { done: number; failed: number } | null {
+function aiRunResult(params: Params): { done: number; failed: number; limited: number } | null {
   const read = (v?: string) => (v && /^\d{1,2}$/.test(v) ? Number(v) : null);
   const done = read(params.analysed);
   const failed = read(params.failed);
-  return done === null || failed === null ? null : { done, failed };
+  const limited = read(params.limited) ?? 0;
+  return done === null || failed === null ? null : { done, failed, limited };
 }
 
 function tabCount(tab: ListTab, counts: Counts | null): number | null {
@@ -119,10 +120,12 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
       ) : null}
 
       {aiResult ? (
-        <Alert tone={aiResult.failed > 0 ? "error" : "success"} title={`AI suggestions added to ${aiResult.done} ${aiResult.done === 1 ? "request" : "requests"}.`}>
-          {aiResult.failed > 0
-            ? `${aiResult.failed} could not be analysed; the AI may be unavailable. Try again later.`
-            : "Open a request to see its suggestions. People still make every decision."}
+        <Alert tone={aiResult.failed > 0 || aiResult.limited > 0 ? "error" : "success"} title={`AI suggestions added to ${aiResult.done} ${aiResult.done === 1 ? "request" : "requests"}.`}>
+          {aiResult.limited > 0
+            ? `Today's AI limit has been reached, so ${aiResult.limited} ${aiResult.limited === 1 ? "request is" : "requests are"} still waiting. Try again tomorrow.`
+            : aiResult.failed > 0
+              ? `${aiResult.failed} could not be analysed; the AI may be unavailable. Try again later.`
+              : "Open a request to see its suggestions. People still make every decision."}
         </Alert>
       ) : null}
 

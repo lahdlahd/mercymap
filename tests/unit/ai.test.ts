@@ -1,4 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
+import { parseDailyLimit } from "@/lib/ai/limits";
 import { PROMPT_VERSION, SYSTEM_PROMPT, buildUserMessage, parseOutput, redact, toolDefinition, type ClaimedRequest } from "@/lib/ai/analysis";
 import { callClaude, isRetryable } from "@/lib/ai/claude";
 
@@ -160,4 +161,11 @@ describe("calling Claude", () => {
     expect(["timeout", "network", "http_429", "http_529", "http_500"].every(isRetryable)).toBe(true);
     expect(["http_400", "http_401", "no_tool_use", "bad_json"].some(isRetryable)).toBe(false);
   });
+});
+
+describe("AI_DAILY_LIMIT", () => {
+  test.each([
+    [undefined, 300], ["", 300], ["  ", 300], ["50", 50], [" 25 ", 25], ["0", 0],
+    ["10000", 10000], ["10001", 300], ["-5", 300], ["2.5", 300], ["ten", 300], ["1e3", 300],
+  ] as [string | undefined, number][])("%j gives %i", (value, expected) => expect(parseDailyLimit(value)).toBe(expected));
 });

@@ -1,4 +1,5 @@
 import "server-only";
+import { parseDailyLimit } from "@/lib/ai/limits";
 
 // Server-only secrets. None of these has a NEXT_PUBLIC_ prefix, so Next.js
 // never includes them in browser code. "server-only" makes any accidental
@@ -40,7 +41,10 @@ export type AiConfig = {
   model: string;
   baseUrl: string;
   supabaseSecretKey: string;
+  // Most AI analyses allowed in any 24 hours, across the platform.
+  dailyLimit: number;
 };
+
 
 // The AI is optional. Without a key (or without the Supabase secret key the
 // runner needs) the app works as before and the request page says AI
@@ -54,5 +58,6 @@ export function aiConfig(): AiConfig | null {
     supabaseSecretKey,
     model: process.env.AI_MODEL || "claude-haiku-5-5",
     baseUrl: (process.env.ANTHROPIC_BASE_URL || "https://api.anthropic.com").replace(/\/+$/, ""),
+    dailyLimit: parseDailyLimit(process.env.AI_DAILY_LIMIT),
   };
 }

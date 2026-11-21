@@ -44,6 +44,7 @@ export async function analyseWaitingAction(_state: FormState, _formData: FormDat
   // The "waiting" card may now be gone, so the page shows the result.
   const done = results.filter((r) => r === "done").length;
   const failed = results.filter((r) => r === "failed" || r === "not_configured").length;
+  const limited = results.filter((r) => r === "limited").length;
   revalidatePath("/app", "layout");
-  redirect(`/app/requests?analysed=${done}&failed=${failed}`);
+  redirect(`/app/requests?analysed=${done}&failed=${failed}&limited=${limited}`);
 }
