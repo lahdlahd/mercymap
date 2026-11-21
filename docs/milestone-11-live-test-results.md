@@ -52,3 +52,26 @@ Brevo and the link worked. Setup issues met and fixed on the way:
 
 Test account created: antyamoke78@gmail.com (no church). Remove before the
 demo if not needed.
+
+## Deployment: Vercel (20–21 Nov 2026)
+
+Production: **https://mercymap.vercel.app** (Vercel Hobby, production branch
+`main`, function region Stockholm arn1 to sit next to Supabase).
+
+| Check | Result |
+|---|---|
+| Build and deploy from GitHub | Pass (about 40 s to 1 min 11 s) |
+| Supabase Site URL and redirect URLs (production and localhost) | Set |
+| Sign in on production as the demo owner; overview figures | Pass |
+| Real Cloudflare Turnstile keys (widget `MERCYMAP`, hostnames `mercymap.vercel.app` and `localhost`, Managed) | Pass: "Success!" on the live form |
+| Public request on production (fictional: food, family of three, Oke-Aro, no phone) | Pass: `MM-D6E59E-2FF340`, listed first as New; Open 11, New 5 |
+
+Notes:
+- Vercel will not switch a saved Secret variable to Config, and warns when a
+  `NEXT_PUBLIC_` variable is Secret. `NEXT_PUBLIC_TURNSTILE_SITE_KEY` was
+  removed and re-added as Config; server secrets stay Secret.
+- `ANTHROPIC_API_KEY` is not set yet, so the live AI panel says suggestions
+  are not set up.
+- Production runs `main` (through Milestone 9) until PR #10 is merged.
+- Test request `MM-D6E59E-2FF340` is in the demo church; decline or keep
+  before recording the demo.
