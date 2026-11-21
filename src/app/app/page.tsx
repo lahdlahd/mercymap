@@ -88,7 +88,7 @@ export default async function OverviewPage() {
             <Tile href="/app/requests?status=attention" label="Needs attention" value={d.attention} alert={d.attention > 0} />
             <Tile href="/app/requests?status=submitted" label="New" value={d.new} />
             <Tile href="/app/requests" label="Open" value={d.open} />
-            <Tile href="/app/requests?status=awaiting_match" label="Awaiting a resource" value={d.awaiting_match} />
+            <Tile href="/app/requests?status=awaiting_match" label="Awaiting match" value={d.awaiting_match} />
             <Tile href="/app/requests?status=approved" label="Approved" value={d.approved} />
             <Tile href="/app/requests?status=in_progress" label="In delivery" value={d.in_progress} />
             <Tile href="/app/reports" label="Helped this month" value={d.fulfilled_this_month} note={`Since ${formatDate(d.month_start)}`} />

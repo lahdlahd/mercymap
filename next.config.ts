@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const securityHeaders = [
@@ -5,6 +6,11 @@ const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), geolocation=(), microphone=(self)" },
+  // Browsers only ever reach the deployed site over HTTPS.
+  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
+  // A narrow policy that cannot break scripts, Turnstile or Supabase: no
+  // plugins, no <base> hijacking, forms post only to this site, no framing.
+  { key: "Content-Security-Policy", value: "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" },
 ];
 
 // Cache Components is deliberately left off. Every signed-in page reads the
@@ -12,6 +18,10 @@ const securityHeaders = [
 // rendering model keeps that simple and avoids any cross-user caching risk.
 const nextConfig: NextConfig = {
   turbopack: {
+    // Pin the root to this folder. A stray lockfile higher up (for example in
+    // the user's home folder) must never make Turbopack watch that whole tree:
+    // constant changes there caused an endless reload loop in development.
+    root: path.join(__dirname),
     rules: {
       "*.css": {
         loaders: ["@tailwindcss/turbopack"],

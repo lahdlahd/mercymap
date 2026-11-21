@@ -125,6 +125,7 @@ export async function rerunAiAction(requestId: string): Promise<FormState> {
   revalidatePath("/app/requests");
   if (outcome === "done") return { ok: true, message: "Suggestions updated." };
   if (outcome === "skipped") return { message: "An analysis is already running. Refresh in a moment." };
+  if (outcome === "limited") return { message: "Today's AI limit has been reached. Try again tomorrow; everything else works as normal." };
   return { message: "The AI could not be reached. Try again later; everything else works as normal." };
 }
 
