@@ -87,7 +87,7 @@ Rules:
 - Safeguarding: set concern to true only if the text suggests someone may be at risk of harm (abuse, violence, self-harm, exploitation, a child or vulnerable adult in danger). Give a short, factual reason. When unsure, say there is a concern; a person will check.
 - Suggest a different kind of help only if the description clearly fits another category better than the one chosen. Otherwise use null.
 - If resource options are listed, you may pick the one that best fits and explain why in one sentence, referring to it as "this resource". If none are listed, use null.
-- Record your answer with the ${TOOL_NAME} tool.`;
+- Always record your answer by calling the ${TOOL_NAME} tool, never as plain text.`;
 
 export function buildUserMessage(c: ClaimedRequest): string {
   const chosen = c.categories.find((k) => k.key === c.category_key);

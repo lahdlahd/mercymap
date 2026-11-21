@@ -5,23 +5,33 @@ export type ClaudeResult = { ok: true; input: unknown } | { ok: false; error: st
 
 const TIMEOUT_MS = 20_000;
 
-// One call to the Anthropic Messages API, forced to answer through the
-// record_analysis tool so the answer has a fixed shape. Errors are reduced to
-// short codes; response bodies are never logged or stored.
+// The request body. Claude Haiku 5.5 accepts a forced tool choice, so the
+// answer always comes through record_analysis. Sonnet 5.5 and Opus 5.5 reject a
+// forced tool choice, so they get "auto" and the prompt tells them to use the
+// tool. No sampling parameters: the 5.5 models reject non-default values.
+// Every answer is still checked by parseOutput and again by the database.
+export function requestBody(claimed: ClaimedRequest, model: string) {
+  const forced = /haiku/i.test(model);
+  return {
+    model,
+    max_tokens: 1024,
+    system: SYSTEM_PROMPT,
+    tools: [toolDefinition(claimed.categories.map((k) => k.key))],
+    tool_choice: forced ? { type: "tool", name: TOOL_NAME } : { type: "auto" },
+    messages: [{ role: "user", content: buildUserMessage(claimed) }],
+  };
+}
+
+// One call to the Anthropic Messages API. Errors are reduced to short codes;
+// for a rejected request Anthropic's own error type and message are logged
+// (they describe the request settings, not its content). Response bodies are
+// never stored.
 export async function callClaude(
   claimed: ClaimedRequest,
   config: { apiKey: string; model: string; baseUrl: string },
   fetchImpl: typeof fetch = fetch,
 ): Promise<ClaudeResult> {
-  const body = {
-    model: config.model,
-    max_tokens: 1024,
-    temperature: 0,
-    system: SYSTEM_PROMPT,
-    tools: [toolDefinition(claimed.categories.map((k) => k.key))],
-    tool_choice: { type: "tool", name: TOOL_NAME },
-    messages: [{ role: "user", content: buildUserMessage(claimed) }],
-  };
+  const body = requestBody(claimed, config.model);
   let response: Response;
   try {
     response = await fetchImpl(`${config.baseUrl}/v1/messages`, {
@@ -38,7 +48,13 @@ export async function callClaude(
   } catch (error) {
     return { ok: false, error: error instanceof Error && error.name === "TimeoutError" ? "timeout" : "network" };
   }
-  if (!response.ok) return { ok: false, error: `http_${response.status}` };
+  if (!response.ok) {
+    const detail = await response.json().catch(() => null) as { error?: { type?: string; message?: string } } | null;
+    if (detail?.error) {
+      console.error(`Anthropic ${response.status}: ${detail.error.type ?? "error"}: ${String(detail.error.message ?? "").slice(0, 200)}`);
+    }
+    return { ok: false, error: `http_${response.status}` };
+  }
   let data: { content?: Array<{ type: string; name?: string; input?: unknown }> };
   try {
     data = await response.json();

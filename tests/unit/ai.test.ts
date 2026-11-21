@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
 import { parseDailyLimit } from "@/lib/ai/limits";
 import { PROMPT_VERSION, SYSTEM_PROMPT, buildUserMessage, parseOutput, redact, toolDefinition, type ClaimedRequest } from "@/lib/ai/analysis";
-import { callClaude, isRetryable } from "@/lib/ai/claude";
+import { callClaude, isRetryable, requestBody } from "@/lib/ai/claude";
 
 const claimed = (o: Partial<ClaimedRequest> = {}): ClaimedRequest => ({
   request_id: "11111111-1111-4111-8111-111111111111",
@@ -147,6 +147,31 @@ describe("calling Claude", () => {
     expect(body.model).toBe("claude-haiku-5-5");
     expect(body.tool_choice).toEqual({ type: "tool", name: "record_analysis" });
     expect(JSON.stringify(body)).not.toContain("test-key");
+  });
+  test("no sampling parameters, which the 5.5 models reject", () => {
+    for (const model of ["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"]) {
+      const body = requestBody(claimed(), model);
+      expect(body).not.toHaveProperty("temperature");
+      expect(body).not.toHaveProperty("top_p");
+      expect(body).not.toHaveProperty("top_k");
+    }
+  });
+  test("forced tool choice only for Haiku; Sonnet and Opus 5.5 get auto", () => {
+    expect(requestBody(claimed(), "claude-haiku-5-5").tool_choice).toEqual({ type: "tool", name: "record_analysis" });
+    expect(requestBody(claimed(), "claude-sonnet-5-5").tool_choice).toEqual({ type: "auto" });
+    expect(requestBody(claimed(), "claude-opus-5-5").tool_choice).toEqual({ type: "auto" });
+    expect(SYSTEM_PROMPT).toContain("Always record your answer by calling the record_analysis tool");
+  });
+  test("a rejected request logs Anthropic's error type and message, not the request", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({
+      type: "error", error: { type: "invalid_request_error", message: "temperature: unsupported value" },
+    }), { status: 400 }));
+    expect(await callClaude(claimed(), config, fetchMock as unknown as typeof fetch)).toEqual({ ok: false, error: "http_400" });
+    const logged = spy.mock.calls.map((c) => c.join(" ")).join("\n");
+    expect(logged).toContain("Anthropic 400: invalid_request_error: temperature: unsupported value");
+    expect(logged).not.toContain("family of four");
+    spy.mockRestore();
   });
   test("errors become short codes", async () => {
     const respond = (status: number, body = "{}") => vi.fn(async () => new Response(body, { status }));
