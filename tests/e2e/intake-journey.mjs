@@ -292,7 +292,7 @@ try {
   const leaks = files.filter((f) => {
     const body = readFileSync(f, 'utf8');
     return body.includes(E2E_SECRET_KEY) || body.includes(E2E_TURNSTILE_SECRET) || body.includes(process.env.INTAKE_HASH_SECRET ?? '\u0000')
-      || body.includes('e2e-anthropic-key') || body.includes('ANTHROPIC_API_KEY');
+      || body.includes('sk-ant-e2e-anthropic-key') || body.includes('ANTHROPIC_API_KEY');
   });
   check(`no secret appears in browser code (${files.length} files checked)`, files.length > 0 && leaks.length === 0, leaks.join(', '));
   const html = await (await fetch(`${BASE}/request/grace-community`)).text();

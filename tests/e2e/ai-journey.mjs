@@ -135,7 +135,7 @@ try {
   console.log('\nWhat was sent to Claude');
   const call = mock.aiCalls.at(-1);
   const sent = JSON.stringify(call?.body ?? {});
-  check('the API key goes only in its header', call?.headers.apiKey === 'e2e-anthropic-key' && !sent.includes('e2e-anthropic-key'));
+  check('the API key goes only in its header', call?.headers.apiKey === 'sk-ant-e2e-anthropic-key' && !sent.includes('sk-ant-e2e-anthropic-key'));
   check('the default model is Haiku 5.5', call?.body.model === 'claude-haiku-5-5');
   check('the answer is forced through the analysis tool', call?.body.tool_choice?.name === 'record_analysis');
   check('no name is sent, even when typed in the description', !/Ada|Okafor/i.test(sent), sent.slice(0, 300));

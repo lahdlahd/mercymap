@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
 import { parseDailyLimit } from "@/lib/ai/limits";
 import { PROMPT_VERSION, SYSTEM_PROMPT, buildUserMessage, parseOutput, redact, toolDefinition, type ClaimedRequest } from "@/lib/ai/analysis";
-import { callClaude, isRetryable, requestBody } from "@/lib/ai/claude";
+import { callClaude, isRetryable, requestBody, settingsProblem } from "@/lib/ai/claude";
 
 const claimed = (o: Partial<ClaimedRequest> = {}): ClaimedRequest => ({
   request_id: "11111111-1111-4111-8111-111111111111",
@@ -133,7 +133,7 @@ describe("checking what comes back", () => {
 });
 
 describe("calling Claude", () => {
-  const config = { apiKey: "test-key", model: "claude-haiku-5-5", baseUrl: "https://example.test" };
+  const config = { apiKey: "sk-ant-test-key", model: "claude-haiku-5-5", baseUrl: "https://example.test" };
   test("sends a forced tool call with the key in a header and returns the tool input", async () => {
     const fetchMock = vi.fn(async () => new Response(JSON.stringify({
       content: [{ type: "text", text: "ignored" }, { type: "tool_use", name: "record_analysis", input: good }],
@@ -142,7 +142,7 @@ describe("calling Claude", () => {
     expect(r).toEqual({ ok: true, input: good });
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe("https://example.test/v1/messages");
-    expect((init.headers as Record<string, string>)["x-api-key"]).toBe("test-key");
+    expect((init.headers as Record<string, string>)["x-api-key"]).toBe("sk-ant-test-key");
     const body = JSON.parse(String(init.body));
     expect(body.model).toBe("claude-haiku-5-5");
     expect(body.tool_choice).toEqual({ type: "tool", name: "record_analysis" });
@@ -192,6 +192,22 @@ describe("calling Claude", () => {
     const refused = vi.fn(async () => { throw Object.assign(new TypeError("fetch failed"), { cause: { code: "ENOTFOUND" } }); });
     await callClaude(claimed(), config, refused as unknown as typeof fetch);
     expect(spy.mock.calls.map((c) => c.join(" ")).join("\n")).toContain("Anthropic request not sent: TypeError ENOTFOUND");
+    spy.mockRestore();
+  });
+  test("malformed settings are named in the log, without the key, and nothing is sent", async () => {
+    const ok = { apiKey: "sk-ant-abc123", baseUrl: "https://api.anthropic.com" };
+    expect(settingsProblem(ok)).toBeNull();
+    expect(settingsProblem({ ...ok, apiKey: "sk-ant-ab\nc123" })).toBe(
+      "ANTHROPIC_API_KEY has an unexpected character at position 10 of 14 (U+000A). Paste the key again.");
+    expect(settingsProblem({ ...ok, apiKey: "sk-ant-…your key…" })).toMatch(/position 8 of 17 \(U\+2026\)/);
+    expect(settingsProblem({ ...ok, apiKey: "ANTHROPIC_API_KEY=sk-ant-abc" })).toMatch(/does not start with sk-ant-/);
+    expect(settingsProblem({ ...ok, baseUrl: "api.anthropic.com" })).toMatch(/ANTHROPIC_BASE_URL is not a valid web address/);
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const fetchMock = vi.fn();
+    const r = await callClaude(claimed(), { ...config, apiKey: "sk-ant-se\ncret" }, fetchMock as unknown as typeof fetch);
+    expect(r).toEqual({ ok: false, error: "bad_settings" });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(spy.mock.calls.join(" ")).not.toContain("cret");
     spy.mockRestore();
   });
   test("which errors are retried", () => {
