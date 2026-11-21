@@ -182,6 +182,18 @@ describe("calling Claude", () => {
     const timeout = vi.fn(async () => { throw Object.assign(new Error("t"), { name: "TimeoutError" }); });
     expect(await callClaude(claimed(), config, timeout as unknown as typeof fetch)).toEqual({ ok: false, error: "timeout" });
   });
+  test("a request that cannot be sent logs the error kind, never its message", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const bad = vi.fn(async () => { throw new TypeError('Headers.append: "test-key\n" is an invalid header value.'); });
+    expect(await callClaude(claimed(), config, bad as unknown as typeof fetch)).toEqual({ ok: false, error: "network" });
+    const logged = spy.mock.calls.map((c) => c.join(" ")).join("\n");
+    expect(logged).toContain("Anthropic request not sent: TypeError");
+    expect(logged).not.toContain("test-key");
+    const refused = vi.fn(async () => { throw Object.assign(new TypeError("fetch failed"), { cause: { code: "ENOTFOUND" } }); });
+    await callClaude(claimed(), config, refused as unknown as typeof fetch);
+    expect(spy.mock.calls.map((c) => c.join(" ")).join("\n")).toContain("Anthropic request not sent: TypeError ENOTFOUND");
+    spy.mockRestore();
+  });
   test("which errors are retried", () => {
     expect(["timeout", "network", "http_429", "http_529", "http_500"].every(isRetryable)).toBe(true);
     expect(["http_400", "http_401", "no_tool_use", "bad_json"].some(isRetryable)).toBe(false);

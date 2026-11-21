@@ -46,7 +46,12 @@ export async function callClaude(
       cache: "no-store",
     });
   } catch (error) {
-    return { ok: false, error: error instanceof Error && error.name === "TimeoutError" ? "timeout" : "network" };
+    if (error instanceof Error && error.name === "TimeoutError") return { ok: false, error: "timeout" };
+    // Name and low-level code only: a fetch error message can quote header
+    // values, and the API key is a header.
+    const cause = error instanceof Error ? (error as Error & { cause?: { code?: string; name?: string } }).cause : undefined;
+    console.error(`Anthropic request not sent: ${error instanceof Error ? error.name : "unknown"}${cause?.code ? ` ${cause.code}` : cause?.name ? ` ${cause.name}` : ""}`);
+    return { ok: false, error: "network" };
   }
   if (!response.ok) {
     const detail = await response.json().catch(() => null) as { error?: { type?: string; message?: string } } | null;
