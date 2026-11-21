@@ -92,3 +92,16 @@ applied.
 | Safeguarding (teenage girl not safe at home) | Pass: keyword flag shown with the review form; AI high urgency, risk described accurately; a person must review |
 | Resource suggestion (student nurse, Ijapo Estate, awaiting match) | Pass: suggests Family food package with a correct reason and "You still choose and approve below"; asks for household size, which the request lacks; no safeguarding concern |
 | Welfare concern raised by AI on a closed request (elderly bereaved man, MM-E4373B-066893) | Observed: AI raised "Needs attention"; to be reviewed and cleared by a person (demo moment) |
+
+## Real AI on production (21 Nov 2026)
+
+First attempts on https://mercymap.vercel.app failed before reaching
+Anthropic (`AI analysis failed: network`, then `Anthropic request not sent:
+TypeError`). The key had been entered in Vercel with a malformed value. Fixes:
+settings are trimmed (PR #11) and checked before any call, with the problem
+named in the logs without the key (PR #12). After the key was re-entered from
+`.env.local`, production works:
+
+| Check | Result |
+|---|---|
+| Public request on production (fictional: school bag and books, Isikan, no phone) `MM-02C1F0-BA7207` | Pass: "Suggestions updated."; accurate summary, key facts, sensible questions, medium urgency, no safeguarding concern |
