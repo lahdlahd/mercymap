@@ -61,7 +61,7 @@ Analysis starts automatically when a request arrives and can be re-run by staff.
 
 ## Tech stack / tools used
 
-Next.js 16 (App Router), TypeScript, Tailwind CSS, Supabase (PostgreSQL, Auth, Row Level Security), Zod, Recharts, Anthropic Claude (Haiku 5.5) via the Messages API, Cloudflare Turnstile, Brevo SMTP, Vercel. Tested with Node's test runner against PostgreSQL (301 database tests, including tenant-isolation and permission tests), Vitest (186 unit tests), Puppeteer (9 end-to-end journeys, 480 checks) and axe-core accessibility checks. Built with AI assistance (Claude).
+Next.js 16 (App Router), TypeScript, Tailwind CSS, Supabase (PostgreSQL, Auth, Row Level Security), Zod, Recharts, Anthropic Claude (Haiku 5.5) via the Messages API, Cloudflare Turnstile, Brevo SMTP, Vercel. Tested with Node's test runner against PostgreSQL (301 database tests, including tenant-isolation and permission tests), Vitest (186 unit tests), Puppeteer (9 end-to-end journeys, 480 checks) and axe-core accessibility checks. Built with AI assistance (Claude). Demo video narration voice generated with Kokoro text-to-speech.
 
 ## Work period confirmation
 
