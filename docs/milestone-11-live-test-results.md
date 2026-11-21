@@ -75,3 +75,20 @@ Notes:
 - Production runs `main` (through Milestone 9) until PR #10 is merged.
 - Test request `MM-D6E59E-2FF340` is in the demo church; decline or keep
   before recording the demo.
+
+## Real AI: Claude Haiku 5.5 (21 Nov 2026, local against the live database)
+
+First run: every request failed with HTTP 400. Claude Haiku 5.5 rejects
+non-default sampling parameters, and the request sent `temperature: 0`.
+Fixed in `02f3843` (temperature removed; forced tool choice kept for Haiku,
+`auto` for Sonnet/Opus 5.5; Anthropic's error type and message now logged for
+rejected requests). Daily cap migration `20261121100000_ai_daily_limit.sql`
+applied.
+
+| Check | Result |
+|---|---|
+| "Analyse waiting requests" on the demo church | Pass: "AI suggestions added to 29 requests." |
+| Brief request (MM-D6E59E-2FF340, family of three, Oke Aro) | Pass: summary sticks to what was said and notes it is brief; correct key facts; sensible questions (urgency, dietary needs or infants, safe contact); medium urgency |
+| Safeguarding (teenage girl not safe at home) | Pass: keyword flag shown with the review form; AI high urgency, risk described accurately; a person must review |
+| Resource suggestion (student nurse, Ijapo Estate, awaiting match) | Pass: suggests Family food package with a correct reason and "You still choose and approve below"; asks for household size, which the request lacks; no safeguarding concern |
+| Welfare concern raised by AI on a closed request (elderly bereaved man, MM-E4373B-066893) | Observed: AI raised "Needs attention"; to be reviewed and cleared by a person (demo moment) |
